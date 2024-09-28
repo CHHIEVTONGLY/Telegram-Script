@@ -110,6 +110,13 @@ def clear_key():
     return True
 
 
+def print_intro():
+    print("""
+        LCT TELEGRAM SERVICE
+        ---------------------------------------------------
+        """)
+
+
 def print_info(me):
     print(Fore.GREEN + f"""
         Account name : {me.first_name} {me.last_name if me.last_name else ''}
@@ -139,6 +146,7 @@ async def main():
     '3': clear_key,
     '4': exit
     }
+    print_intro()
 
     client.start()
 
@@ -150,11 +158,6 @@ async def main():
         hash=0
     ))
     chats.extend(result.chats) # type: ignore
-
-    print("""
-          LCT TELEGRAM SERVICE
-          ---------------------------------------------------
-          """)
 
     me = await client.get_me()
 
