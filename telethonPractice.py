@@ -5,20 +5,8 @@ from colorama import Fore, Back, Style, init
 import time
 import os
 import json
+from other_function import get_api_credentials, clear_key, print_intro, print_info
 
-
-def get_api_credentials(credentials_file):
-    if not os.path.exists(credentials_file):
-        api_id = int(input("Enter your API ID: "))
-        api_hash = input("Enter your API Hash: ")
-        with open(credentials_file, 'w') as f:
-            json.dump({"api_id": api_id, "api_hash": api_hash}, f)
-    else:
-        with open(credentials_file, 'r') as f:
-            credentials = json.load(f)
-            api_id = credentials['api_id']
-            api_hash = credentials['api_hash']
-    return api_id, api_hash
 
 
 # initalization
@@ -96,41 +84,6 @@ async def forward_message_to_all_groups(limit=1):
             time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
     else:
         print("No messages found in Saved Messages.")
-
-
-def clear_key():
-    """Delete The Credential and Session."""
-
-    if os.path.exists(credentials_file):
-        os.remove(credentials_file)
-        os.remove("sessionkey.session")
-        print(f"{credentials_file} and {session_file} has been deleted.")
-    else:
-        print("Session file not found. Please login again.")
-    return True
-
-
-def print_intro():
-    print("""
-        LCT TELEGRAM SERVICE
-        ---------------------------------------------------
-        """)
-
-
-def print_info(me):
-    print(Fore.GREEN + f"""
-        Account name : {me.first_name} {me.last_name if me.last_name else ''}
-        """)
-
-    print("""
-            
-        1.Get chat list
-        2.Forward your Last Saved messages to all groups
-        3.Clear API KEYs (optional if you enter wrong key on first input)
-        4. Exit the program.        
-        ---------------------------------------------------
-        
-        """)
 
 
 async def forward_messages():
