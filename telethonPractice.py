@@ -3,10 +3,7 @@ from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty, User
 from colorama import Fore, Back, Style, init
 import time
-import os
-import json
 from other_function import get_api_credentials, clear_key, print_intro, print_info
-
 
 
 # initalization
