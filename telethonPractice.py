@@ -1,43 +1,43 @@
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import InputPeerEmpty
+from telethon.tl.types import InputPeerEmpty, User
 from colorama import Fore, Back, Style, init
 import time
 import os
 import json
 
-# Define the session file name
+
+def get_api_credentials(credentials_file):
+    if not os.path.exists(credentials_file):
+        api_id = int(input("Enter your API ID: "))
+        api_hash = input("Enter your API Hash: ")
+        with open(credentials_file, 'w') as f:
+            json.dump({"api_id": api_id, "api_hash": api_hash}, f)
+    else:
+        with open(credentials_file, 'r') as f:
+            credentials = json.load(f)
+            api_id = credentials['api_id']
+            api_hash = credentials['api_hash']
+    return api_id, api_hash
+
+
+# initalization
+init(autoreset=True)
+
 session_file = 'sessionkey'
 credentials_file = 'credentials.json'
 
-# Initialize colorama with autoreset=True
-init(autoreset=True)
-
-# Check if the credentials file exists
-if not os.path.exists(credentials_file):
-    # Ask the user for API credentials only if the credentials file doesn't exist
-    api_id = int(input("Enter your API ID: "))  # Input for API ID
-    api_hash = input("Enter your API Hash: ")   # Input for API Hash
-
-    # Save the API credentials to a file for future use
-    with open(credentials_file, 'w') as f:
-        json.dump({"api_id": api_id, "api_hash": api_hash}, f)
-else:
-    # Load the saved API credentials from the file
-    with open(credentials_file, 'r') as f:
-        credentials = json.load(f)
-        api_id = credentials['api_id']
-        api_hash = credentials['api_hash']
-
-# Create or load the client session using the session file and the credentials
+api_id, api_hash = get_api_credentials(credentials_file)
 client = TelegramClient(session_file, api_id, api_hash)
+
 chats = []
 last_date = None
 chunk_size = 200
 groups = []
 groupid = []
 
-async def getChat():
+
+async def get_chat():
     for chat in chats:
         try:
             if chat.megagroup is True:
@@ -52,6 +52,7 @@ async def getChat():
         groupid.append(group.id)
         i += 1
 
+
 async def forward_message_to_group(group_id, from_chat_id, message_id):
     # Forward the message from Saved Messages to the group
     try:
@@ -60,8 +61,9 @@ async def forward_message_to_group(group_id, from_chat_id, message_id):
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
 
+
 async def forward_message_to_all_groups():
-    
+
     # Get the "Saved Messages" chat entity
     saved_messages = await client.get_entity('me')
     print(f"Saved Messages Chat ID: {saved_messages.id}")
@@ -70,7 +72,8 @@ async def forward_message_to_all_groups():
     messages = await client.get_messages(saved_messages, limit=1)
     if messages:
         message_id_to_forward = messages[0].id
-        print(f"Message to forward: {messages[0].text}, ID: {message_id_to_forward}")
+        print(
+            f"Message to forward: {messages[0].text}, ID: {message_id_to_forward}")
 
         # Forward the last message from Saved Messages to all groups
         for group in groupid:
@@ -79,16 +82,25 @@ async def forward_message_to_all_groups():
     else:
         print("No messages found in Saved Messages.")
 
+
 # Updated log_out function to disconnect the client and then delete files
-async def clearkey():
+async def clear_key():
     if os.path.exists(credentials_file):
         os.remove(credentials_file)
-        print(f"{credentials_file} has been deleted.")
+        os.remove("sessionkey.session")
+        print(f"{credentials_file} and {session_file} has been deleted.")
     else:
         print("Session file not found. Please login again.")
+    return True
+
+
+async def forward_messages():
+    await get_chat()
+    await forward_message_to_all_groups()
+
 
 async def main():
-    await client.start()  # Ensure client is started
+    client.start()
 
     result = await client(GetDialogsRequest(
         offset_date=last_date,
@@ -98,27 +110,48 @@ async def main():
         hash=0
     ))
     chats.extend(result.chats)
-    
 
-    print("\t\t LCT TELEGRAM SERVICE")
-    print("---------------------------------------------------")
+    print("""
+          LCT TELEGRAM SERVICE
+          ---------------------------------------------------
+          """)
+
     while True:
         me = await client.get_me()
-        print(Fore.GREEN +  f"\nAccount name : {me.first_name} {me.last_name if me.last_name else ''}")
-        print("\n1.Get chat list \n2.Forward messages to all groups\n3.Clear API KEYs (optional if you enter wrong key on first input)\n---------------------------------------------------")
+
+        if not isinstance(me, User):
+            print("Unexpected error please try again!")
+            exit()
+
+        print(Fore.GREEN + f"""
+            Account name : {me.first_name} {me.last_name if me.last_name else ''}
+            """)
+
+        print("""
+              
+            1.Get chat list
+            2.Forward your Last Saved messages to all groups
+            3.Clear API KEYs (optional if you enter wrong key on first input)
+            ---------------------------------------------------
+            
+              """)
+
         option = input("Enter number to choose an option : ")
 
-        if option == '1':
-            await getChat()
-        elif option == '2':
-            # The first messages from your saved messages file will be forwarded into all groups
-            await getChat()
-            await forward_message_to_all_groups()
-        elif option == '3':
-            await clearkey()  # Ensure to await the log_out function
-            break
+        OPTIONS = {
+            '1': get_chat,
+            '2': forward_messages,
+            '3': clear_key
+        }
+
+        action = OPTIONS.get(option)
+        if action:
+            should_break = await action()
+            if should_break:
+                break
         else:
             break
+
 
 # Run the main function
 with client:
