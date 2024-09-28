@@ -1,6 +1,7 @@
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty
+from colorama import Fore, Back, Style, init
 import time
 import os
 import json
@@ -8,6 +9,9 @@ import json
 # Define the session file name
 session_file = 'sessionkey'
 credentials_file = 'credentials.json'
+
+# Initialize colorama with autoreset=True
+init(autoreset=True)
 
 # Check if the credentials file exists
 if not os.path.exists(credentials_file):
@@ -99,6 +103,8 @@ async def main():
     print("\t\t LCT TELEGRAM SERVICE")
     print("---------------------------------------------------")
     while True:
+        me = await client.get_me()
+        print(Fore.GREEN +  f"\nAccount name : {me.first_name} {me.last_name if me.last_name else ''}")
         print("\n1.Get chat list \n2.Forward messages to all groups\n3.Clear API KEYs (optional if you enter wrong key on first input)\n---------------------------------------------------")
         option = input("Enter number to choose an option : ")
 
