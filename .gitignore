@@ -1,3 +1,7 @@
 credentials.json
 sessionkey.session
 tempCodeRunnerFile.py
+testing/
+myabc.py
+.gitignore
+__pycache__/

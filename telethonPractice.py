@@ -1,92 +1,95 @@
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import InputPeerEmpty
+from telethon.tl.types import InputPeerEmpty, User
 from colorama import Fore, Back, Style, init
 import csv
 import time
+from other_function import get_api_credentials, print_intro, print_info
 import os
-import json
 
-# Define the session file name
+
+# initalization
+init(autoreset=True)
+
 session_file = 'sessionkey'
 credentials_file = 'credentials.json'
 
-# Initialize colorama with autoreset=True
-init(autoreset=True)
-
-# Check if the credentials file exists
-if not os.path.exists(credentials_file):
-    # Ask the user for API credentials only if the credentials file doesn't exist
-    api_id = int(input("Enter your API ID: "))  # Input for API ID
-    api_hash = input("Enter your API Hash: ")   # Input for API Hash
-
-    # Save the API credentials to a file for future use
-    with open(credentials_file, 'w') as f:
-        json.dump({"api_id": api_id, "api_hash": api_hash}, f)
-else:
-    # Load the saved API credentials from the file
-    with open(credentials_file, 'r') as f:
-        credentials = json.load(f)
-        api_id = credentials['api_id']
-        api_hash = credentials['api_hash']
-
-# Create or load the client session using the session file and the credentials
+api_id, api_hash = get_api_credentials(credentials_file)
 client = TelegramClient(session_file, api_id, api_hash)
+
 chats = []
 last_date = None
 chunk_size = 200
 groups = []
 groupid = []
 
-async def getChat():
-    for chat in chats:
-        try:
-            if chat.megagroup is True:
-                groups.append(chat)
-        except:
-            continue
 
+async def get_chat():
+    """Get list of all Megagroup in Chat list."""
+    
     print('Printing the group:')
-    i = 0
-    for group in groups:
-        print(f"{i} - {group.title} | ID - {group.id}")
-        groupid.append(group.id)
-        i += 1
+
+    if groups:
+        for index, chat in enumerate(groups):
+            print(f"{index + 1} - {chat.title} | ID - {chat.id}")
+        print()
+        return
+    
+    for chat in chats:
+        if getattr(chat, 'megagroup', False):
+            groups.append(chat)
+
+            print(f"{len(groups)} - {chat.title} | ID - {chat.id}")
+            groupid.append(chat.id)
+    print()
+    return
+
 
 async def forward_message_to_group(group_id, from_chat_id, message_id):
-    # Forward the message from Saved Messages to the group
+    """Forward the message from Saved Messages to the group."""
+
     try:
         await client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
-        print(f"Message {message_id} forwarded to group {group_id}")
+        print(f"Message ID {message_id} forwarded to group with ID {group_id}")
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
 
-async def forward_message_to_all_groups():
+
+async def forward_message_to_all_groups(limit=1):
+    """
+    Forward Message from Saved Messages to all Megagroup.
+
+    Limit initially set to 1. Meaning the last saved message.
+
+    Change it to n to Forward n last Saved Message. 
     
+    """
+
     # Get the "Saved Messages" chat entity
     saved_messages = await client.get_entity('me')
-    print(f"Saved Messages Chat ID: {saved_messages.id}")
+    print(f"Saved Messages Chat ID: {saved_messages.id}") # type: ignore no worry it is single entity
 
     # Fetch the last message from Saved Messages
-    messages = await client.get_messages(saved_messages, limit=1)
+    messages = await client.get_messages(saved_messages, limit=limit)
     if messages:
-        message_id_to_forward = messages[0].id
-        print(f"Message to forward: {messages[0].text}, ID: {message_id_to_forward}")
+        if isinstance(messages, list):
+            message_id_to_forward = messages[0].id
+            message_text = messages[0].text
+        else:
+            message_id_to_forward = messages.id
+            message_text = messages.message
+        print(f"Message to forward: {message_text}, ID: {message_id_to_forward}")
 
-        # Forward the last message from Saved Messages to all groups
+        # Forward from Saved Messages to all groups
         for group in groupid:
-            await forward_message_to_group(group, saved_messages.id, message_id_to_forward)
+            await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
             time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
     else:
         print("No messages found in Saved Messages.")
+    
+    print()
+    return
 
-# Updated log_out function to disconnect the client and then delete files
-async def clearkey():
-    if os.path.exists(credentials_file):
-        os.remove(credentials_file)
-        print(f"{credentials_file} has been deleted.")
-    else:
-        print("Session file not found. Please login again.")
 
 # Scrap members and save into csv file
 async def scrape_members():
@@ -153,9 +156,35 @@ async def scrape_members():
     print('[+] Members with usernames scraped successfully.')
 
 
+async def clear_key():
+    """Delete The Credential and Session."""
+
+    if os.path.exists(credentials_file):
+        os.remove(credentials_file)
+        await client.log_out()
+        print(f"You are now Logged out and {credentials_file} and has been deleted.")
+    else:
+        print("Session file not found. Please login again.")
+    return True
+
+
+async def forward_messages():
+    await get_chat()
+    await forward_message_to_all_groups()
+
 
 async def main():
-    await client.start()  # Ensure client is started
+
+    OPTIONS = {
+    '1': get_chat,
+    '2': forward_messages,
+    '3': clear_key,
+    '4': scrape_members,
+    '5': exit
+    }
+    print_intro()
+
+    await client.start() # type: ignore
 
     result = await client(GetDialogsRequest(
         offset_date=last_date,
@@ -164,31 +193,28 @@ async def main():
         limit=chunk_size,
         hash=0
     ))
-    chats.extend(result.chats)
-    
+    chats.extend(result.chats) # type: ignore
 
-    print("\t\t LCT TELEGRAM SERVICE")
-    print("---------------------------------------------------")
+    me = await client.get_me()
+
+    if not isinstance(me, User):
+        print("Unexpected error please try again!")
+        exit()
+
     while True:
-        me = await client.get_me()
-        print(Fore.GREEN +  f"\nAccount name : {me.first_name} {me.last_name if me.last_name else ''}")
-        print("\n1.Get chat list \n2.Forward messages to all groups\n3.Scrape members\n4.Clear API KEYs (optional if you enter wrong key on first input)\n---------------------------------------------------")
-        option = input("Enter number to choose an option : ")
 
-        if option == '1':
-            await getChat()
-        elif option == '2':
-            # The first messages from your saved messages file will be forwarded into all groups
-            await getChat()
-            await forward_message_to_all_groups()
-        elif option == '3':
-            await scrape_members()
-            break
-        elif option == '4':
-            await clearkey()  # Ensure to await the log_out function
-            break
+        print_info(me)
+        await get_chat()
+
+        option = input("Enter number to choose an option : ")
+        action = OPTIONS.get(option)
+        if action:
+            should_break = await action()
+            if should_break:
+                break
         else:
-            break
+            print('Invalid option, please try again.')
+
 
 # Run the main function
 with client:
