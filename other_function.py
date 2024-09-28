@@ -33,10 +33,11 @@ def print_info(me):
 
         {Fore.GREEN + user_info + Style.RESET_ALL}
           
-        1.Get chat list
-        2.Forward your Last Saved messages to all groups
-        3.Clear API KEYs (optional if you enter wrong key on first input)
-        4. Exit the program.        
+        1. Get chat list
+        2. Forward your Last Saved messages to all groups
+        3. Scrap Member from a group and save to CSV file.        
+        4. Clear API KEYs (optional if you enter wrong key on first input)
+        5. Exit the program.        
 
         ---------------------------------------------------
         
