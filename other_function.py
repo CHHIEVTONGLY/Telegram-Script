@@ -19,36 +19,25 @@ def get_api_credentials(credentials_file):
             api_hash = credentials['api_hash']
     return api_id, api_hash
 
-def clear_key(credentials_file, session_file):
-    """Delete The Credential and Session."""
-
-    if os.path.exists(credentials_file):
-        os.remove(credentials_file)
-        os.remove(session_file)
-        print(f"{credentials_file} and {session_file} has been deleted.")
-    else:
-        print("Session file not found. Please login again.")
-    return True
-
 
 def print_intro():
     print("""
-        LCT TELEGRAM SERVICE
-        ---------------------------------------------------
-        """)
+        LCT TELEGRAM SERVICE""")
 
 
 def print_info(me):
-    print(Fore.GREEN + f"""
-        Account name : {me.first_name} {me.last_name if me.last_name else ''}
-        """)
+    
+    user_info = f"Account name : {me.first_name} {me.last_name if me.last_name else ''}"
+    print(f"""
+        ---------------------------------------------------
 
-    print("""
-            
+        {Fore.GREEN + user_info + Style.RESET_ALL}
+          
         1.Get chat list
         2.Forward your Last Saved messages to all groups
         3.Clear API KEYs (optional if you enter wrong key on first input)
         4. Exit the program.        
+
         ---------------------------------------------------
         
         """)

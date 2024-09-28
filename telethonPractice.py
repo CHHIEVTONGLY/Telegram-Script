@@ -3,7 +3,8 @@ from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty, User
 from colorama import Fore, Back, Style, init
 import time
-from other_function import get_api_credentials, clear_key, print_intro, print_info
+from other_function import get_api_credentials, print_intro, print_info
+import os
 
 
 # initalization
@@ -29,7 +30,8 @@ async def get_chat():
 
     if groups:
         for index, chat in enumerate(groups):
-            print(f"{index} - {chat.title} | ID - {chat.id}")
+            print(f"{index + 1} - {chat.title} | ID - {chat.id}")
+        print()
         return
     
     for chat in chats:
@@ -38,6 +40,8 @@ async def get_chat():
 
             print(f"{len(groups)} - {chat.title} | ID - {chat.id}")
             groupid.append(chat.id)
+    print()
+    return
 
 
 async def forward_message_to_group(group_id, from_chat_id, message_id):
@@ -45,7 +49,7 @@ async def forward_message_to_group(group_id, from_chat_id, message_id):
 
     try:
         await client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
-        print(f"Message {message_id} forwarded to group {group_id}")
+        print(f"Message ID {message_id} forwarded to group with ID {group_id}")
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
 
@@ -81,6 +85,21 @@ async def forward_message_to_all_groups(limit=1):
             time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
     else:
         print("No messages found in Saved Messages.")
+    
+    print()
+    return
+
+
+async def clear_key():
+    """Delete The Credential and Session."""
+
+    if os.path.exists(credentials_file):
+        os.remove(credentials_file)
+        await client.log_out()
+        print(f"You are now Logged out and {credentials_file} and has been deleted.")
+    else:
+        print("Session file not found. Please login again.")
+    return True
 
 
 async def forward_messages():
@@ -93,12 +112,12 @@ async def main():
     OPTIONS = {
     '1': get_chat,
     '2': forward_messages,
-    '3': clear_key,
+    '3': lambda: clear_key(),
     '4': exit
     }
     print_intro()
 
-    client.start()
+    await client.start() # type: ignore
 
     result = await client(GetDialogsRequest(
         offset_date=last_date,
