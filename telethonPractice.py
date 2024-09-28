@@ -1,6 +1,8 @@
+from datetime import datetime
+import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import InputPeerEmpty, User
+from telethon.tl.types import InputPeerEmpty, User , UserStatusOffline
 from colorama import Fore, Back, Style, init
 import csv
 import time
@@ -141,20 +143,33 @@ async def scrape_members():
         writer = csv.writer(f, delimiter=",", lineterminator="\n")
         writer.writerow(['username', 'user id', 'access hash', 'name', 'group', 'group id'])
         
+        # Define the timezone
+        utc = pytz.utc
+
+        start_of_today = datetime.now(utc)
+
         for user in all_participants:
-            # Use username if it exists, otherwise fallback to user ID
-            username = user.username if user.username else f"user_{user.id}"
+             # Skip users who have deleted accounts
+            if user.deleted:
+                first_name = user.first_name if user.first_name else "Unknown"
+                last_name = user.last_name if user.last_name else ""
+                print(f"Skipping deleted user: {first_name} {last_name} (ID: {user.id})")  # Debugging line
+                continue
+            
+            if isinstance(user.status, UserStatusOffline):
+                if user.status.was_online.date() == start_of_today.date():
 
-            # Collect user's first and last name
-            first_name = user.first_name if user.first_name else ""
-            last_name = user.last_name if user.last_name else ""
-            name = (first_name + ' ' + last_name).strip()
+                    username = user.username if user.username else f"user_{user.id}"
 
-            # Write the user information to the CSV file
-            writer.writerow([username, user.id, user.access_hash, name, target_group.title, target_group.id])
+                    # Collect user's first and last name
+                    first_name = user.first_name if user.first_name else ""
+                    last_name = user.last_name if user.last_name else ""
+                    name = (first_name + ' ' + last_name).strip()
+
+                    # Write the user information to the CSV file
+                    writer.writerow([username, user.id, user.access_hash, name, target_group.title, target_group.id])
 
     print('[+] Members with usernames scraped successfully.')
-
 
 async def clear_key():
     """Delete The Credential and Session."""

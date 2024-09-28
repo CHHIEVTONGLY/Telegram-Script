@@ -5,3 +5,5 @@ testing/
 myabc.py
 .gitignore
 __pycache__/
+members.csv
+sessionkey.session-journal

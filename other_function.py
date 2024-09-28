@@ -22,7 +22,7 @@ def get_api_credentials(credentials_file):
 
 def print_intro():
     print("""
-        LCT TELEGRAM SERVICE""")
+        TELEGRAM TOOLS""")
 
 
 def print_info(me):
@@ -30,14 +30,13 @@ def print_info(me):
     user_info = f"Account name : {me.first_name} {me.last_name if me.last_name else ''}"
     print(f"""
         ---------------------------------------------------
-
         {Fore.GREEN + user_info + Style.RESET_ALL}
           
         1.Get chat list
         2.Forward your Last Saved messages to all groups
         3.Clear API KEYs (optional if you enter wrong key on first input)
-        4. Exit the program.        
+        4.Scrape only active users
+        5.Exit the program.        
 
         ---------------------------------------------------
-        
         """)
