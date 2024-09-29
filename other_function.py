@@ -34,9 +34,10 @@ def print_info(me):
           
         1.Get chat list
         2.Forward your Last Saved messages to all groups
-        3.Clear API KEYs (optional if you enter wrong key on first input)
+        3.Add members to a group
         4.Scrape only active users
-        5.Exit the program.        
+        5.Clear API KEYs (optional if you enter wrong key on first input)
+        6.Exit the program.        
 
         ---------------------------------------------------
         """)

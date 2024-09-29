@@ -3,11 +3,17 @@ import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty, User , UserStatusOffline
+from telethon.tl.types import InputPeerEmpty, InputPeerChannel, InputPeerUser
+from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
+import random
+import traceback
+from telethon.tl.functions.channels import InviteToChannelRequest
+from telethon.tl.types import InputPeerUser, InputPeerChannel
 from colorama import Fore, Back, Style, init
 import csv
 import time
 from other_function import get_api_credentials, print_intro, print_info
-import os
+import os, sys
 
 
 # initalization
@@ -188,14 +194,151 @@ async def forward_messages():
     await forward_message_to_all_groups()
 
 
+# Function to get the megagroups from chats
+def get_megagroups(chats):
+    groups = []
+    for chat in chats:
+        try:
+            if chat.megagroup == True:
+                groups.append(chat)
+        except:
+            continue
+    return groups
+
+
+# Function to display groups and let user choose one
+def choose_group(groups):
+    print( Fore.GREEN + "[+] Available groups:" + Style.RESET_ALL)
+    for i, group in enumerate(groups):
+        print(f"[{i}] - {group.title}")
+    
+    g_index = input("\n[+] Choose a group to add members: ")
+    return groups[int(g_index)]
+
+
+# Function to write remaining users back to CSV
+def write_remaining_users_to_csv(remaining_users, input_file):
+    with open(input_file, mode='w', encoding='UTF-8', newline='') as f:
+        writer = csv.writer(f, delimiter=",", lineterminator="\n")
+        writer.writerow(['username', 'id', 'access_hash', 'name'])
+        for user in remaining_users:
+            writer.writerow([user['username'], user['id'], user['access_hash'], user['name']])
+    print("[+] Remaining users saved back to CSV file.")
+
+
+def write_remaining_users_to_csv(remaining_users, input_file):
+    with open(input_file, mode='w', encoding='UTF-8', newline='') as f:
+        writer = csv.writer(f, delimiter=",", lineterminator="\n")
+        # Writing the header first into a CSV file
+        writer.writerow(['username', 'id', 'access_hash', 'name'])
+        for user in remaining_users:
+            writer.writerow([user['username'], user['id'], user['access_hash'], user['name']])
+    print("[+] Remaining users saved back to CSV file.")
+
+
+def read_csv_file():
+    users = []
+
+    # Open the CSV file correctly
+    with open("members.csv", mode="r", encoding='UTF-8') as input_file:
+        rows = csv.reader(input_file, delimiter=",", lineterminator="\n")
+        next(rows, None)  # Skip header
+
+        for row in rows:
+            # Create a dictionary for each user and append to the list
+            user = {
+                'username': row[0],
+                'id': int(row[1]),
+                'access_hash': int(row[2]),
+                'name': row[3]
+            }
+            users.append(user)
+    
+    return users
+
+
+# Add users to group
+async def add_users_to_group(client, target_group_entity, users, input_file):
+    print("1.Adding users by timestamp to group\n2.Adding users by set limit to group")
+    mode = int(input("Choose an option: "))
+
+    if mode == 2:
+        max_users = int(input("Enter the maximum number of users to add: "))
+
+    users_added = 0
+
+    for user in users[:]:  # iterating over a copy of the list so we can modify it
+        try:
+
+            if mode == 2 and users_added >= max_users:
+                print(f"[+] Reached the limit of {max_users} users. Stopping.")
+                break
+
+            user_to_add = InputPeerUser(user['id'], user['access_hash'])
+            print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['id']}")
+
+            # Add the user to the group
+            await client(InviteToChannelRequest(target_group_entity, [user_to_add]))
+            print("[+] User successfully added. Removing user from list.")
+            
+            # Remove user from the list after successfully adding
+            users.remove(user)
+
+            users_added += 1
+
+            # Wait between 10 to 30 seconds to avoid getting rate-limited
+            print("[+] Waiting for 10-30 seconds before adding the next user...")
+            time.sleep(random.uniform(10, 30))
+
+        except PeerFloodError:
+            print("[!] Flood error from Telegram. Saving remaining users back to CSV and stopping the script.")
+            write_remaining_users_to_csv(users, input_file)
+            break  # Stop adding more users to prevent more flood errors
+
+        except UserPrivacyRestrictedError:
+            print("[!] The user's privacy settings prevent this action. Skipping to the next user.")
+            users.remove(user)  # Remove from the list even if we skip due to privacy settings
+
+        except Exception as e:
+            print(f"[!] Unexpected error: {e}")
+            traceback.print_exc()
+            continue  # Continue to the next user in case of any other exception
+
+    # If there are still users left, save them back to the CSV
+    if users:
+        write_remaining_users_to_csv(users, input_file)
+
+
+# Add members to group
+async def add_members_to_group(client, chats, input_file):
+    # Get megagroups from the chats
+    groups = get_megagroups(chats)
+
+    if not groups:
+        print("[!] No megagroups found.")
+        return
+
+    # Let user select the group
+    target_group = choose_group(groups)
+    target_group_entity = InputPeerChannel(target_group.id, target_group.access_hash)
+
+    # Read the CSV file to get the list of users
+    users = read_csv_file()
+
+    # Add users to the group
+    await add_users_to_group(client, target_group_entity, users, input_file)
+
+
+
 async def main():
 
     OPTIONS = {
     '1': get_chat,
     '2': forward_messages,
-    '3': clear_key,
+    '3': lambda: add_members_to_group(client, chats, "members.csv"),
     '4': scrape_members,
-    '5': exit
+    '5': clear_key,
+    '6': exit
     }
     print_intro()
 
