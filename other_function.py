@@ -21,8 +21,15 @@ def get_api_credentials(credentials_file):
 
 
 def print_intro():
-    print("""
-        TELEGRAM TOOLS""")
+    print(f""" {Fore.LIGHTBLUE_EX} 
+        
+ _____ _____ _     _____ ____ ____      _    __  __   _____ ___   ___  _     
+|_   _| ____| |   | ____/ ___|  _ \    / \  |  \/  | |_   _/ _ \ / _ \| |    
+  | | |  _| | |   |  _|| |  _| |_) |  / _ \ | |\/| |   | || | | | | | | |    
+  | | | |___| |___| |__| |_| |  _ <  / ___ \| |  | |   | || |_| | |_| | |___ 
+  |_| |_____|_____|_____\____|_| \_\/_/   \_\_|  |_|   |_| \___/ \___/|_____|
+
+{Style.RESET_ALL}"""  )
 
 
 def print_info(me):
@@ -37,7 +44,7 @@ def print_info(me):
         3.Add members to a group
         4.Scrape only active users
         5.Clear API KEYs (optional if you enter wrong key on first input)
-        6.Exit the program.        
+        {Fore.RED}6.Exit the program.{Style.RESET_ALL}   
 
         ---------------------------------------------------
         """)

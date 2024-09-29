@@ -100,7 +100,16 @@ async def forward_message_to_all_groups(limit=1):
                 await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
                 time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
             print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
-            time.sleep(random.uniform(1200, 1800))
+            print("\n1.Waiting for 20-30 minutes to forward messages again\n2.Back to menu\n3.Exit program")
+            option = input("[+]Input option : ")
+            if option == '1':
+                time.sleep(random.uniform(1200, 1800))
+            elif option == '2':
+                return
+            elif option == '3':
+                exit_the_program()
+            else: 
+                print("Invalid option.")
     else:
         print("No messages found in Saved Messages.")
     
@@ -199,7 +208,7 @@ async def clear_key():
         if os.path.exists(session_file):
             os.remove(session_file)
             print(f"[+] Successfully removed {session_file}.")
-            exit
+            sys.exit()
 
 
         print(f"You are now Logged out and {credentials_file} and has been deleted.")
@@ -347,6 +356,9 @@ async def add_members_to_group(client, chats, input_file):
     # Add users to the group
     await add_users_to_group(client, target_group_entity, users, input_file)
 
+def exit_the_program():
+    print("Exiting the program...")
+    sys.exit()
 
 async def main():
 
@@ -356,7 +368,7 @@ async def main():
     '3': lambda: add_members_to_group(client, chats, "members.csv"),
     '4': scrape_members,
     '5': clear_key,
-    '6': exit,
+    '6': exit_the_program,
     }
     print_intro()
 
@@ -375,12 +387,11 @@ async def main():
 
     if not isinstance(me, User):
         print("Unexpected error please try again!")
-        exit()
+        sys.exit()
 
     while True:
 
         print_info(me)
-        await get_chat()
 
         option = input("Enter number to choose an option : ")
         action = OPTIONS.get(option)

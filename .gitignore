@@ -7,3 +7,6 @@ myabc.py
 __pycache__/
 members.csv
 sessionkey.session-journal
+dist
+build
+TG_Script.spec
