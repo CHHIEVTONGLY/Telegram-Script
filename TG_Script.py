@@ -100,16 +100,9 @@ async def forward_message_to_all_groups(limit=1):
                 await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
                 time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
             print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
-            print("\n1.Waiting for 20-30 minutes to forward messages again\n2.Back to menu\n3.Exit program")
-            option = input("[+]Input option : ")
-            if option == '1':
-                time.sleep(random.uniform(1200, 1800))
-            elif option == '2':
-                return
-            elif option == '3':
-                exit_the_program()
-            else: 
-                print("Invalid option.")
+            print(f"[+] Waiting for 20-30 minutes {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
+            time.sleep(random.uniform(1200, 1800))
+            
     else:
         print("No messages found in Saved Messages.")
     
