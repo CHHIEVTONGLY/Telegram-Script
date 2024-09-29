@@ -5,6 +5,7 @@ from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty, User , UserStatusOffline
 from telethon.tl.types import InputPeerEmpty, InputPeerChannel, InputPeerUser
 from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
+from telethon.tl.functions.channels import LeaveChannelRequest
 import random
 import traceback
 from telethon.tl.functions.channels import InviteToChannelRequest
@@ -54,13 +55,18 @@ async def get_chat():
 
 
 async def forward_message_to_group(group_id, from_chat_id, message_id):
-    """Forward the message from Saved Messages to the group."""
-
+    """Forward the message from Saved Messages to the group and leave if it fails."""
     try:
         await client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
         print(f"Message ID {message_id} forwarded to group with ID {group_id}")
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
+        # Automatically leave the group on failure
+        try:
+            await client(LeaveChannelRequest(group_id))
+            print(f"[+] Left the group with ID {group_id} due to forwarding failure.")
+        except Exception as leave_error:
+            print(f"[!] Failed to leave the group {group_id}: {str(leave_error)}")
 
 
 async def forward_message_to_all_groups(limit=1):
@@ -75,7 +81,7 @@ async def forward_message_to_all_groups(limit=1):
 
     # Get the "Saved Messages" chat entity
     saved_messages = await client.get_entity('me')
-    print(f"Saved Messages Chat ID: {saved_messages.id}") # type: ignore no worry it is single entity
+    print(f"Saved Messages Chat ID: {saved_messages.id}") 
 
     # Fetch the last message from Saved Messages
     messages = await client.get_messages(saved_messages, limit=limit)
@@ -89,13 +95,15 @@ async def forward_message_to_all_groups(limit=1):
         print(f"Message to forward: {message_text}, ID: {message_id_to_forward}")
 
         # Forward from Saved Messages to all groups
-        for group in groupid:
-            await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
-            time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
+        while True :
+            for group in groupid:
+                await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
+                time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
+            print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
+            time.sleep(random.uniform(1200, 1800))
     else:
         print("No messages found in Saved Messages.")
     
-    print()
     return
 
 
