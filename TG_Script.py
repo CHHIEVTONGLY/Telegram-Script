@@ -182,7 +182,18 @@ async def clear_key():
 
     if os.path.exists(credentials_file):
         os.remove(credentials_file)
-        await client.log_out()
+        print("[+] Logging out and removing session...")
+        await client.log_out()  
+        await client.disconnect()
+        
+        #remove the session file
+        session_file = 'sessionkey.session'
+        if os.path.exists(session_file):
+            os.remove(session_file)
+            print(f"[+] Successfully removed {session_file}.")
+            exit
+
+
         print(f"You are now Logged out and {credentials_file} and has been deleted.")
     else:
         print("Session file not found. Please login again.")
@@ -329,7 +340,6 @@ async def add_members_to_group(client, chats, input_file):
     await add_users_to_group(client, target_group_entity, users, input_file)
 
 
-
 async def main():
 
     OPTIONS = {
@@ -338,7 +348,7 @@ async def main():
     '3': lambda: add_members_to_group(client, chats, "members.csv"),
     '4': scrape_members,
     '5': clear_key,
-    '6': exit
+    '6': exit,
     }
     print_intro()
 
