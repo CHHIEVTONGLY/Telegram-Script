@@ -4,7 +4,7 @@ from telethon.tl.types import InputPeerEmpty, User
 from colorama import Fore, Back, Style, init
 import csv
 import time
-from other_function import get_api_credentials,create_telegram_clients, print_intro, print_info
+from other_function import create_telegram_clients, print_intro, print_info
 import os
 
 
