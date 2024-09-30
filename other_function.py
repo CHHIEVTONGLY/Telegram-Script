@@ -43,7 +43,9 @@ def create_telegram_clients(credentials_file="credentials.csv"):
 
 
 def print_intro():
-    print(f""" {Fore.LIGHTBLUE_EX} 
+
+    title = r"""
+
         
  _____ _____ _     _____ ____ ____      _    __  __   _____ ___   ___  _     
 |_   _| ____| |   | ____/ ___|  _ \    / \  |  \/  | |_   _/ _ \ / _ \| |    
@@ -51,7 +53,9 @@ def print_intro():
   | | | |___| |___| |__| |_| |  _ <  / ___ \| |  | |   | || |_| | |_| | |___ 
   |_| |_____|_____|_____\____|_| \_\/_/   \_\_|  |_|   |_| \___/ \___/|_____|
 
-{Style.RESET_ALL}""")
+
+"""
+    print(f""" {Fore.LIGHTBLUE_EX}{title}{Style.RESET_ALL}""")
 
 
 def print_info(me):
