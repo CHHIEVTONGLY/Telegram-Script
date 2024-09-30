@@ -1,8 +1,11 @@
 credentials.json
-sessionkey.session
+*.session
 tempCodeRunnerFile.py
 testing/
-myabc.py
 .gitignore
 __pycache__/
 *.csv
+*.session-journal
+dist
+build
+TG_Script.spec
