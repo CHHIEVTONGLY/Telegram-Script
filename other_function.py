@@ -8,7 +8,7 @@ init(autoreset=True)
 
 def get_api_credentials(credentials_file="tg_script_account.csv"):
     num_iter = 0
-    num_accounts = int(input("How many accounts do you want to store: "))
+    num_accounts = int(input(f"How many accounts do you want to store {Fore.GREEN}( if you already have account press 0 ): {Style.RESET_ALL}"))
     
     # Check if file exists, if not create it with headers
     if not os.path.exists(credentials_file):
@@ -104,7 +104,8 @@ def print_info(me):
         3.Add members to a group
         4.Scrape only active users
         5.Clear API KEYs (optional if you enter wrong key on first input)
-        {Fore.RED}6.Exit the program.{Style.RESET_ALL}   
+        6.Swtich account
+        {Fore.RED}7.Exit the program.{Style.RESET_ALL}   
 
         ---------------------------------------------------
         """)

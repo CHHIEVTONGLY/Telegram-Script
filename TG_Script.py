@@ -15,6 +15,7 @@ import csv
 import time
 from other_function import get_api_credentials, print_intro, print_info , read_csv_file
 import os, sys
+import re
 
 
 # initalization
@@ -54,13 +55,21 @@ async def increment_and_switch_account():
     # Disconnect from the current client if it exists
     await client.disconnect()
 
-    # Increment the account index
+    # Get a list of all session files matching the pattern
+    session_files = sorted([f for f in os.listdir() if re.match(r'session_key_\d+\.session', f)], key=lambda x: int(re.findall(r'\d+', x)[0]))
+
+    # Determine the total number of accounts
+    total_accounts = len(session_files)
+
+    # Increment the account index and reset if it exceeds the total accounts
     index_acc += 1
+    if index_acc > total_accounts:
+        index_acc = 1  # Reset to the first account if we exceed
 
     # Generate the new session file name
-    session_file = f"session_key_{index_acc}.session"
+    session_file = session_files[index_acc - 1]  # List is zero-indexed
 
-    # Check if the new session file exists
+    # Check if the session file exists
     if os.path.exists(session_file):
         print(f"Session file '{session_file}' found. Switching to account {index_acc}.")
 
@@ -80,8 +89,6 @@ async def increment_and_switch_account():
         # If no session file exists, print an error and stop
         print(f"Session file '{session_file}' does not exist. Cannot switch accounts.")
         return False  # Indicate that switching was unsuccessful
-
-
 async def get_chat():
     """Get list of all Megagroup in Chat list."""
     print('Printing the group:')
@@ -422,8 +429,8 @@ async def main():
     '3': lambda: add_members_to_group(client, chats, "members.csv"),
     '4': scrape_members,
     '5': clear_key,
-    '6': exit_the_program,
-    "7": increment_and_switch_account
+    '6': increment_and_switch_account,
+    "7": exit_the_program
     }
     print_intro()
 
@@ -453,9 +460,8 @@ async def main():
             should_break = await action()
 
             # After switching accounts, refetch and update user info
-            if option == "7":  # If account switching was triggered
+            if option == "6":  # If account switching was triggered
                 me = await client.get_me()  # Fetch new account info after switching
-                print_info(me)  # Update UI with the new account details
 
             if should_break:
                 break
