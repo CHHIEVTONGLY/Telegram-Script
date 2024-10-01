@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import UserStatusOffline, InputPeerChannel, InputUser
+from telethon.tl.types import UserStatusOffline, InputPeerChannel, InputUser, InputPeerEmpty, User
 from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
 from telethon.tl.functions.channels import LeaveChannelRequest, InviteToChannelRequest
 from colorama import Fore, Style, init
@@ -10,6 +10,7 @@ import csv
 import time
 import random
 import traceback
+import os
 
 
 class TelegramBot:
@@ -21,6 +22,28 @@ class TelegramBot:
         self.chunk_size = 200
         self.groups = []
         self.groups_id = []
+        self.me = None
+
+
+    async def start(self):
+        await self.client.start()
+        result = await self.client(GetDialogsRequest(
+            offset_date=self.last_date,
+            offset_id=0,
+            offset_peer=InputPeerEmpty(),
+            limit=self.chunk_size,
+            hash=0
+        ))
+        self.chats.extend(result.chats)
+        await self.__get_me()
+
+
+    async def __get_me(self):
+        self.me = await self.client.get_me()
+
+        if not isinstance(self.me, User):
+            print("Unexpected error please try again!")
+            exit()
 
 
     async def __get_chat(self):
@@ -54,7 +77,7 @@ class TelegramBot:
 
 
     async def forward_message_to_group(self, group_id, from_chat_id, message_id):
-        """Forward the message from Saved Messages to the group and leave if it fails."""
+        """Forward the message from Chat to the group and leave if it fails."""
         try:
             await self.client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
             print(f"Message ID {message_id} forwarded to group with ID {group_id}")
@@ -117,30 +140,8 @@ class TelegramBot:
                 time.sleep(self.sleep_time)
 
 
-    async def scrape_members(self):
+    async def scrape_members(self, target_group):
         self.groups.clear()
-
-        await self.__get_chat()
-        
-        if not self.groups:
-            print("No groups available to scrape members from.")
-            return
-
-        print('[+] Choose a group to scrape members from:')
-        await self.print_chat()
-
-        # Prompt the user to choose a group
-        g_index = eval(input("[+] Enter a number: "))
-        
-        if type(g_index) != int:
-            print("Invalid Input! Exiting the program...")
-            exit()
-
-        if g_index <= 0 or g_index > len(self.groups):
-            print("Invalid group number.")
-            return
-
-        target_group = self.groups[g_index - 1]
 
         print(f'[+] Fetching members from group: {target_group.title}')
         time.sleep(1)
@@ -196,12 +197,16 @@ class TelegramBot:
         return None
     
 
-    def __write_members_to_csv(self, members, target_group_title, target_group_id):
+    def __write_members_to_csv(self, members, target_group_title, target_group_id, filename="members.csv"):
         """Write members to a CSV file."""
-        with open("members.csv", "w", encoding='UTF-8') as f:
+        file_exists = os.path.isfile(filename)
+        
+        with open(filename, "a", encoding='UTF-8') as f:
             writer = csv.writer(f, delimiter=",", lineterminator="\n")
-            writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
-
+            
+            if not file_exists:
+                writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
+            
             for member in members:
                 writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
 
@@ -225,16 +230,30 @@ class TelegramBot:
         return True
 
 
-    def __choose_group(self, groups):
+    async def choose_group(self):
         print(Fore.GREEN + "[+] Available groups:" + Style.RESET_ALL)
-        for i, group in enumerate(groups):
-            print(f"[{i+1}] - {group.title}")
+        await self.print_chat()
+
+        g_index = eval(input("[+] Enter a number: "))
         
-        g_index = input("\n[+] Choose a group to add members: ")
-        return groups[int(g_index) - 1]
+        if type(g_index) != int:
+            print("Invalid Input! Exiting the program...")
+            exit()
+
+        if g_index <= 0 or g_index > len(self.groups):
+            print("Invalid group number.")
+            exit()
+
+        target_group = self.groups[g_index - 1]
+        target_group_entity = InputPeerChannel(target_group.id, target_group.access_hash)
+        return {'target_group': target_group, 'target_group_entity':target_group_entity}
 
 
-    def __read_csv_file(self, input_file="members.csv"):
+    def __read_csv_file(self, input_file): # also in misc
+        """
+        Read member from CSV with this format username,id,access_hash,name
+        """
+
         users = []
         with open(input_file, mode="r", encoding='UTF-8') as f:
             rows = csv.reader(f, delimiter=",", lineterminator="\n")
@@ -303,6 +322,10 @@ class TelegramBot:
 
 
     async def add_members_to_group(self, input_file):
+        """
+        Add members to a group
+        """
+
         # Get megagroups from the chats
         
         if not self.groups:
@@ -313,12 +336,50 @@ class TelegramBot:
             return
 
         # Let user select the group
-        target_group = self.__choose_group(self.groups)
-        target_group_entity = InputPeerChannel(target_group.id, target_group.access_hash)
+        
+        chosen_group = await self.choose_group()
+        target_group_entity = chosen_group['target_group_entity']
 
         # Read the CSV file to get the list of users
-        users = self.__read_csv_file()
+        users = self.__read_csv_file(input_file=input_file)
 
         # Add users to the group
         await self.add_users_to_group(target_group_entity, users, input_file)
 
+    # async def add_user(self, user):
+    #     if not self.groups:
+    #         await self.__get_chat()
+
+    #     if not self.groups:
+    #         print("[!] No megagroups found.")
+    #         return
+        
+        
+    #     target_group_entity = self.choose_group()
+
+    #     await self.add_U2G(target_group_entity, user)
+
+
+    async def add_U2G(self, target_group_entity, user):
+        try:                
+            user_to_add = InputUser(user['id'], user['access_hash'])
+            print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['id']}")
+
+            # Add the user to the group
+            await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
+            print("[+] User successfully added. Removing user from list.")
+            
+            # Wait between 10 to 30 seconds to avoid getting rate-limited
+            print("[+] Waiting for 10-30 seconds before adding the next user...")
+            time.sleep(random.uniform(10, 30))
+
+        except PeerFloodError:
+            print("[!] Flood error from Telegram. Saving remaining users back to CSV and stopping the script.")
+            
+        except UserPrivacyRestrictedError:
+            print("[!] The user's privacy settings prevent this action. Skipping to the next user.")
+            
+        except Exception as e:
+            print(f"[!] Unexpected error: {e}")
+            traceback.print_exc()
+            
