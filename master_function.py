@@ -27,21 +27,30 @@ async def print_all_bots_chat(bots):
 
 
 async def all_bots_forward(bots):
+    try:
+        limit = int(input("How many messages? (Default=1): "))
+        if limit > 100:
+            limit = 1
+    except:
+        limit = 1
+    print(f"Send {limit} messages to each group.")
+
     for index, bot in bots:
         print("Forwarding from Bot", index)
-        await bot.forward_message_to_all_groups()
+        await bot.forward_message_to_all_groups(limit)
     return
 
 
 async def all_bots_add_members(bots, limit_per_bot=10, members_file="members.csv"):
     members = read_csv_file(members_file)
 
-    chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
-    
+    chunks = [members[i:i + limit_per_bot]
+              for i in range(0, len(members), limit_per_bot)]
+
     if not bots:
         print("[!] No bots available.")
         return
-    
+
     target_group_entity = await bots[0][1].choose_group()['target_group_entity']
 
     remaining_members = []
@@ -55,10 +64,11 @@ async def all_bots_add_members(bots, limit_per_bot=10, members_file="members.csv
         except Exception as e:
             print(f"Error adding members with bot {bot_index}: {e}")
             remaining_members.extend(chunk)
-    
+
     if remaining_members:
         remaining_file = "remaining_members.csv"
-        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file, mode='w')
+        write_members_to_csv(remaining_members, "Remaining Users",
+                             0, filename=remaining_file, mode='w')
         print(f"Remaining members written to {remaining_file}")
 
     return
@@ -68,7 +78,7 @@ async def all_bots_scrape_members(bots):
     if not bots:
         print("[!] No bots available.")
         return
-    
+
     chosen_group = await bots[0][1].choose_group()
     target_group = chosen_group['target_group']
 

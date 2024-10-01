@@ -86,7 +86,7 @@ class TelegramBot:
             await self.__LeaveChannel(group_id)
 
 
-    async def forward_message_to_all_groups(self):
+    async def forward_message_to_all_groups(self, limit):
         """
         Forward Message from Saved Messages to all Megagroup.
     
@@ -96,15 +96,6 @@ class TelegramBot:
         """
         if not self.groups:
             await self.__get_chat()
-
-        # find out how many chat to forward
-        try:
-            limit = int(input("How many messages? (Default=1): "))
-            if limit > 100:
-                limit = 1
-        except:
-            limit = 1
-        print(f"Send {limit} messages to each group.")
         
         # Get the "Saved Messages" chat and fetch messages
         saved_messages = await self.client.get_entity('me')
