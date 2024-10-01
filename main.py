@@ -18,13 +18,14 @@ def create_telegram_bots(credentials_file="credentials.csv"):
     credentials_list = get_api_credentials(credentials_file)
     bots = []
 
-    for credentials in credentials_list:
+    for i, credentials in enumerate(credentials_list):
         api_id = int(credentials["api_id"])
         api_hash = credentials["api_hash"]
         session_key = credentials["session_key"]
         bot = TelegramBot(api_id, api_hash, session_key)
         
-        bots.append(bot)
+        bots.append([i + 1, bot])
+        print(i+1)
 
     return bots
 
@@ -34,8 +35,12 @@ async def main():
     
     bots = create_telegram_bots()
 
-    for bot in bots:
+    for i, bot in bots:
+        print(i)
         await bot.start()
+
+    # Start all bots concurrently
+    # await asyncio.gather(*(bot.start() for bot in bots))
 
     OPTIONS = {
         '1': lambda: print_all_bots_info(bots),
