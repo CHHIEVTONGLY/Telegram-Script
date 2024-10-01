@@ -71,6 +71,18 @@ def write_members_to_csv(members, target_group_title, target_group_id, filename=
             writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
 
 
+def eval_input(prompt: str, lower_limit: int, upper_limit: int, default: int) -> int:
+
+    try:
+        the_input = int(input(prompt))
+        if the_input > upper_limit or the_input < lower_limit:
+            the_input = default
+    except:
+        the_input = default
+
+    return the_input
+
+
 def print_intro():
 
     title = r"""

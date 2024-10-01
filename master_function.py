@@ -1,4 +1,4 @@
-from misc import exit_the_program, read_csv_file, write_members_to_csv
+from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input
 
 
 async def print_bot_info(bot):
@@ -27,12 +27,7 @@ async def print_all_bots_chat(bots):
 
 
 async def all_bots_forward(bots):
-    try:
-        limit = int(input("How many messages? (Default=1): "))
-        if limit > 100:
-            limit = 1
-    except:
-        limit = 1
+    limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
     print(f"Send {limit} messages to each group.")
 
     for index, bot in bots:
@@ -79,12 +74,16 @@ async def all_bots_scrape_members(bots):
         print("[!] No bots available.")
         return
 
-    chosen_group = await bots[0][1].choose_group()
+    await print_all_bots_chat(bots)
+
+    bot_index = eval_input("Please choose bots to scrape (enter number): ", 0, len(bots) + 1, 1)
+
+    bot = bots[bot_index - 1][1]
+    chosen_group = await bot.choose_group()
     target_group = chosen_group['target_group']
 
-    for index, bot in bots:
-        print(f"Bot {index} is scraping.")
-        await bot.scrape_members(target_group)
+    print(f"Bot {bot_index} is scraping.")
+    await bot.scrape_members(target_group)
     return
 
 
