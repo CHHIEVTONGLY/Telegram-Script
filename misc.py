@@ -57,11 +57,11 @@ def read_csv_file(input_file): # also in misc
 #         for member in members:
 #             writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
 
-def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv"):
+def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv", mode='a'):
     """Write members to a CSV file."""
     file_exists = os.path.isfile(filename)
     
-    with open(filename, "a", encoding='UTF-8') as f:
+    with open(filename, mode=mode, encoding='UTF-8') as f:
         writer = csv.writer(f, delimiter=",", lineterminator="\n")
         
         if not file_exists:

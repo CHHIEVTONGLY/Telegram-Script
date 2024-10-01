@@ -55,7 +55,7 @@ async def all_bots_add_members(bots, limit_per_bot=10, members_file="members.csv
     
     if remaining_members:
         remaining_file = "remaining_members.csv"
-        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file)
+        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file, mode='w')
         print(f"Remaining members written to {remaining_file}")
 
     return
