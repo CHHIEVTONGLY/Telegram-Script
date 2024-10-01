@@ -101,23 +101,26 @@ async def get_chat():
     print()
     return
 
-
 async def forward_message_to_group(group_id, from_chat_id, message_id):
-    """Forward the message from Saved Messages to the group and leave if it fails."""
+    """Forward the message from Saved Messages to the group."""
+
     try:
         await client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
         print(f"Message ID {message_id} forwarded to group with ID {group_id}")
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
-        # Automatically leave the group on failure
-        try:
-            await client(LeaveChannelRequest(group_id))
-            print(f"[+] Left the group with ID {group_id} due to forwarding failure.")
-        except Exception as leave_error:
-            print(f"[!] Failed to leave the group {group_id}: {str(leave_error)}")
 
 
-async def forward_message_to_all_groups(limit=1):
+
+
+async def forward_to_all(group_ids, chat_id, messages):
+    for group_id in group_ids:
+        for message in messages:
+            await forward_message_to_group(group_id, chat_id, message.id)
+            time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
+
+
+async def forward_message_to_all_groups():
     """
     Forward Message from Saved Messages to all Megagroup.
 
@@ -126,34 +129,40 @@ async def forward_message_to_all_groups(limit=1):
     Change it to n to Forward n last Saved Message. 
     
     """
+    if not groups:
+        await get_chat()
 
     # Get the "Saved Messages" chat entity
     saved_messages = await client.get_entity('me')
-    print(f"Saved Messages Chat ID: {saved_messages.id}") 
+    print(f"Saved Messages Chat ID: {saved_messages.id}") # type: ignore no worry it is single entity
 
+    try:
+        limit = int(input("How many messages? (Default=1): "))
+        if limit > 5:
+            limit = 1
+    except:
+        limit = 1
+    print(f"Send {limit} messages to each group.")
+    
     # Fetch the last message from Saved Messages
     messages = await client.get_messages(saved_messages, limit=limit)
     if messages:
         if isinstance(messages, list):
-            message_id_to_forward = messages[0].id
-            message_text = messages[0].text
+            print_messages(messages)
         else:
-            message_id_to_forward = messages.id
-            message_text = messages.message
-        print(f"Message to forward: {message_text}, ID: {message_id_to_forward}")
+            print(f"Message: {messages.message}, Message ID: {messages.id}")
+            messages = [messages]
 
-        # Forward from Saved Messages to all groups
-        while True :
-            for group in groupid:
-                await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
-                time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
-            print(f"[+] Waiting for 20-25 minutes to forawrd again ( Auto forward ) {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
-            time.sleep(random.uniform(1200, 1500))
-            
+        await forward_to_all(group_ids=groupid, chat_id=saved_messages.id, messages=messages) # type: ignore
     else:
         print("No messages found in Saved Messages.")
     
+    print()
     return
+
+def print_messages(messages):
+    for message in messages:
+        print(f"Message: {message.text}, Message ID: {message.id}")
 
 
 # Scrap members and save into csv file
