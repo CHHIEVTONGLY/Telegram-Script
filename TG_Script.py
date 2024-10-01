@@ -147,9 +147,8 @@ async def forward_message_to_all_groups(limit=1):
             for group in groupid:
                 await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
                 time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
-            print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
-            print(f"[+] Waiting for 20-30 minutes {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
-            time.sleep(random.uniform(1200, 1800))
+            print(f"[+] Waiting for 20-25 minutes to forawrd again ( Auto forward ) {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
+            time.sleep(random.uniform(1200, 1500))
             
     else:
         print("No messages found in Saved Messages.")
@@ -381,6 +380,11 @@ async def add_users_to_group(client, target_group_entity, users, input_file):
 # Add members to group
 async def add_members_to_group(client, chats, input_file):
     # Get megagroups from the chats
+
+    if not os.path.exists("members.csv"):
+        print("[!] No CSV file found. Please generate the CSV file first.")
+        return
+    
     groups = get_megagroups(chats)
 
     if not groups:
