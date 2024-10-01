@@ -13,18 +13,34 @@ from telethon.tl.types import InputPeerUser, InputPeerChannel
 from colorama import Fore, Back, Style, init
 import csv
 import time
-from other_function import get_api_credentials, print_intro, print_info
+from other_function import get_api_credentials, print_intro, print_info , read_csv_file
 import os, sys
 
 
 # initalization
 init(autoreset=True)
 
-session_file = 'sessionkey'
-credentials_file = 'credentials.json'
+credentials_file = 'tg_script_account.csv'
 
-api_id, api_hash = get_api_credentials(credentials_file)
-client = TelegramClient(session_file, api_id, api_hash)
+credentials_list = get_api_credentials(credentials_file)
+
+for credentials in credentials_list:
+    api_id = credentials["api_id"]
+    api_hash = credentials["api_hash"]
+    
+session_file = read_csv_file(credentials_file)
+
+index_acc = 1
+
+session_file = "session_key_" + str(index_acc) + ".session"
+
+# Correct the condition to check if the file exists
+if os.path.exists(session_file):
+    client = TelegramClient(session_file, api_id, api_hash)
+else:
+    print(f"Session file '{session_file}' does not exist.")
+
+session_list = read_csv_file(credentials_file)
 
 chats = []
 last_date = None
@@ -32,10 +48,42 @@ chunk_size = 200
 groups = []
 groupid = []
 
+async def increment_and_switch_account():
+    global index_acc, client, session_file, api_id, api_hash
+
+    # Disconnect from the current client if it exists
+    await client.disconnect()
+
+    # Increment the account index
+    index_acc += 1
+
+    # Generate the new session file name
+    session_file = f"session_key_{index_acc}.session"
+
+    # Check if the new session file exists
+    if os.path.exists(session_file):
+        print(f"Session file '{session_file}' found. Switching to account {index_acc}.")
+
+        # Create a new client instance with the new session
+        client = TelegramClient(session_file, api_id, api_hash)
+
+        # Start the new client session
+        await client.start()
+        print(f"Switched to account with session: {session_file}")
+
+        # Fetch the new account info and update `me`
+        me = await client.get_me()  # Ensure that the `me` object is updated
+        print(f"Switched to account: {me.first_name} {me.last_name} (ID: {me.id})")
+
+        return  
+    else:
+        # If no session file exists, print an error and stop
+        print(f"Session file '{session_file}' does not exist. Cannot switch accounts.")
+        return False  # Indicate that switching was unsuccessful
+
 
 async def get_chat():
     """Get list of all Megagroup in Chat list."""
-    
     print('Printing the group:')
 
     if groups:
@@ -100,16 +148,9 @@ async def forward_message_to_all_groups(limit=1):
                 await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
                 time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
             print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
-            print("\n1.Waiting for 20-30 minutes to forward messages again\n2.Back to menu\n3.Exit program")
-            option = input("[+]Input option : ")
-            if option == '1':
-                time.sleep(random.uniform(1200, 1800))
-            elif option == '2':
-                return
-            elif option == '3':
-                exit_the_program()
-            else: 
-                print("Invalid option.")
+            print(f"[+] Waiting for 20-30 minutes {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
+            time.sleep(random.uniform(1200, 1800))
+            
     else:
         print("No messages found in Saved Messages.")
     
@@ -369,6 +410,7 @@ async def main():
     '4': scrape_members,
     '5': clear_key,
     '6': exit_the_program,
+    "7": increment_and_switch_account
     }
     print_intro()
 
@@ -390,19 +432,22 @@ async def main():
         sys.exit()
 
     while True:
+        print_info(me)  # Update the user info in the menu
 
-        print_info(me)
-
-        option = input("Enter number to choose an option : ")
+        option = input("Enter number to choose an option: ")
         action = OPTIONS.get(option)
         if action:
             should_break = await action()
+
+            # After switching accounts, refetch and update user info
+            if option == "7":  # If account switching was triggered
+                me = await client.get_me()  # Fetch new account info after switching
+                print_info(me)  # Update UI with the new account details
+
             if should_break:
                 break
         else:
             print('Invalid option, please try again.')
-
-
 # Run the main function
 with client:
     client.loop.run_until_complete(main())

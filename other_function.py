@@ -56,6 +56,26 @@ def create_telegram_clients(credentials_file="tg_script_account.csv"):
 
     return clients
 
+def read_csv_file(csv_file):
+    user_acc = []
+    
+    try:
+        with open(csv_file, 'r', newline='', encoding='UTF-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if "session_key" in row:  # Check if the key exists
+                    user_acc.append(row["session_key"])
+                else:
+                    print("Warning: 'session_key' not found in the row.")
+    
+    except FileNotFoundError:
+        print(f"Error: The file '{csv_file}' was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return user_acc
+
+
 def print_intro():
 
     title = r"""
