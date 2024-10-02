@@ -6,29 +6,44 @@ from telethon import TelegramClient
 init(autoreset=True)
 
 
-def get_api_credentials(credentials_file="credentials.csv"):
+def get_api_credentials(credentials_file="tg_script_account.csv"):
+    num_iter = 0
+    num_accounts = int(input(f"How many accounts do you want to store {Fore.GREEN}( if you already have account press 0 ): {Style.RESET_ALL}"))
+    
+    # Check if file exists, if not create it with headers
     if not os.path.exists(credentials_file):
-        api_id = int(input("Enter your API ID: "))
-        api_hash = input("Enter your API Hash: ")
-        session_key = input("Enter your Session Key: ")
-        
         with open(credentials_file, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=["api_id", "api_hash", "session_key"])
             writer.writeheader()
+
+    # Store the new accounts
+    while num_iter < num_accounts:
+        api_id = int(input(f"Enter API ID for account {num_iter + 1}: "))
+        api_hash = input(f"Enter API Hash for account {num_iter + 1}: ")
+        session_key = f"session_key_{num_iter + 1}.session"
+        
+        # Log in the account
+        client = TelegramClient(session_key, api_id, api_hash)
+        client.start()  # This will prompt for the code and complete the login
+        print(f"Successfully logged in account {num_iter + 1}")
+
+        # Store the credentials in the CSV file
+        with open(credentials_file, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=["api_id", "api_hash", "session_key"])
             writer.writerow({"api_id": api_id, "api_hash": api_hash, "session_key": session_key})
         
-        return [{"api_id": api_id, "api_hash": api_hash, "session_key": session_key}]
-    else:
-        credentials_list = []
-        with open(credentials_file, 'r', newline='') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                credentials_list.append(row)
-        
-        return credentials_list # format: [{api_key:api,api_hash:hash,session_key:location}]
+        num_iter += 1
 
+    # Read and return the entire list of credentials from the CSV
+    credentials_list = []
+    with open(credentials_file, 'r', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            credentials_list.append(row)
 
-def create_telegram_clients(credentials_file="credentials.csv"):
+    return credentials_list  # format: [{'api_id': id, 'api_hash': hash, 'session_key': key}]
+
+def create_telegram_clients(credentials_file="tg_script_account.csv"):
     credentials_list = get_api_credentials(credentials_file)
     clients = []
 
@@ -40,6 +55,25 @@ def create_telegram_clients(credentials_file="credentials.csv"):
         clients.append(client)
 
     return clients
+
+def read_csv_file(csv_file):
+    user_acc = []
+    
+    try:
+        with open(csv_file, 'r', newline='', encoding='UTF-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if "session_key" in row:  # Check if the key exists
+                    user_acc.append(row["session_key"])
+                else:
+                    print("Warning: 'session_key' not found in the row.")
+    
+    except FileNotFoundError:
+        print(f"Error: The file '{csv_file}' was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return user_acc
 
 
 def print_intro():
@@ -70,7 +104,8 @@ def print_info(me):
         3.Add members to a group
         4.Scrape only active users
         5.Clear API KEYs (optional if you enter wrong key on first input)
-        {Fore.RED}6.Exit the program.{Style.RESET_ALL}   
+        6.Swtich account
+        {Fore.RED}7.Exit the program.{Style.RESET_ALL}   
 
         ---------------------------------------------------
         """)

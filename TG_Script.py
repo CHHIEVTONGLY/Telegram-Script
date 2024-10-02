@@ -13,18 +13,35 @@ from telethon.tl.types import InputPeerUser, InputPeerChannel
 from colorama import Fore, Back, Style, init
 import csv
 import time
-from other_function import get_api_credentials, print_intro, print_info
+from other_function import get_api_credentials, print_intro, print_info , read_csv_file
 import os, sys
+import re
 
 
 # initalization
 init(autoreset=True)
 
-session_file = 'sessionkey'
-credentials_file = 'credentials.json'
+credentials_file = 'tg_script_account.csv'
 
-api_id, api_hash = get_api_credentials(credentials_file)
-client = TelegramClient(session_file, api_id, api_hash)
+credentials_list = get_api_credentials(credentials_file)
+
+for credentials in credentials_list:
+    api_id = credentials["api_id"]
+    api_hash = credentials["api_hash"]
+    
+session_file = read_csv_file(credentials_file)
+
+index_acc = 1
+
+session_file = "session_key_" + str(index_acc) + ".session"
+
+# Correct the condition to check if the file exists
+if os.path.exists(session_file):
+    client = TelegramClient(session_file, api_id, api_hash)
+else:
+    print(f"Session file '{session_file}' does not exist.")
+
+session_list = read_csv_file(credentials_file)
 
 chats = []
 last_date = None
@@ -32,10 +49,48 @@ chunk_size = 200
 groups = []
 groupid = []
 
+async def increment_and_switch_account():
+    global index_acc, client, session_file, api_id, api_hash
 
+    # Disconnect from the current client if it exists
+    await client.disconnect()
+
+    # Get a list of all session files matching the pattern
+    session_files = sorted([f for f in os.listdir() if re.match(r'session_key_\d+\.session', f)], key=lambda x: int(re.findall(r'\d+', x)[0]))
+
+    # Determine the total number of accounts
+    total_accounts = len(session_files)
+
+    # Increment the account index and reset if it exceeds the total accounts
+    index_acc += 1
+    if index_acc > total_accounts:
+        index_acc = 1  # Reset to the first account if we exceed
+
+    # Generate the new session file name
+    session_file = session_files[index_acc - 1]  # List is zero-indexed
+
+    # Check if the session file exists
+    if os.path.exists(session_file):
+        print(f"Session file '{session_file}' found. Switching to account {index_acc}.")
+
+        # Create a new client instance with the new session
+        client = TelegramClient(session_file, api_id, api_hash)
+
+        # Start the new client session
+        await client.start()
+        print(f"Switched to account with session: {session_file}")
+
+        # Fetch the new account info and update `me`
+        me = await client.get_me()  # Ensure that the `me` object is updated
+        print(f"Switched to account: {me.first_name} {me.last_name} (ID: {me.id})")
+
+        return  
+    else:
+        # If no session file exists, print an error and stop
+        print(f"Session file '{session_file}' does not exist. Cannot switch accounts.")
+        return False  # Indicate that switching was unsuccessful
 async def get_chat():
     """Get list of all Megagroup in Chat list."""
-    
     print('Printing the group:')
 
     if groups:
@@ -53,23 +108,26 @@ async def get_chat():
     print()
     return
 
-
 async def forward_message_to_group(group_id, from_chat_id, message_id):
-    """Forward the message from Saved Messages to the group and leave if it fails."""
+    """Forward the message from Saved Messages to the group."""
+
     try:
         await client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
         print(f"Message ID {message_id} forwarded to group with ID {group_id}")
     except Exception as e:
         print(f"Failed to forward message to group {group_id}: {str(e)}")
-        # Automatically leave the group on failure
-        try:
-            await client(LeaveChannelRequest(group_id))
-            print(f"[+] Left the group with ID {group_id} due to forwarding failure.")
-        except Exception as leave_error:
-            print(f"[!] Failed to leave the group {group_id}: {str(leave_error)}")
 
 
-async def forward_message_to_all_groups(limit=1):
+
+
+async def forward_to_all(group_ids, chat_id, messages):
+    for group_id in group_ids:
+        for message in messages:
+            await forward_message_to_group(group_id, chat_id, message.id)
+            time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
+
+
+async def forward_message_to_all_groups():
     """
     Forward Message from Saved Messages to all Megagroup.
 
@@ -78,35 +136,40 @@ async def forward_message_to_all_groups(limit=1):
     Change it to n to Forward n last Saved Message. 
     
     """
+    if not groups:
+        await get_chat()
 
     # Get the "Saved Messages" chat entity
     saved_messages = await client.get_entity('me')
-    print(f"Saved Messages Chat ID: {saved_messages.id}") 
+    print(f"Saved Messages Chat ID: {saved_messages.id}") # type: ignore no worry it is single entity
 
+    try:
+        limit = int(input("How many messages? (Default=1): "))
+        if limit > 5:
+            limit = 1
+    except:
+        limit = 1
+    print(f"Send {limit} messages to each group.")
+    
     # Fetch the last message from Saved Messages
     messages = await client.get_messages(saved_messages, limit=limit)
     if messages:
         if isinstance(messages, list):
-            message_id_to_forward = messages[0].id
-            message_text = messages[0].text
+            print_messages(messages)
         else:
-            message_id_to_forward = messages.id
-            message_text = messages.message
-        print(f"Message to forward: {message_text}, ID: {message_id_to_forward}")
+            print(f"Message: {messages.message}, Message ID: {messages.id}")
+            messages = [messages]
 
-        # Forward from Saved Messages to all groups
-        while True :
-            for group in groupid:
-                await forward_message_to_group(group, saved_messages.id, message_id_to_forward) # type: ignore
-                time.sleep(5)  # Sleep for 5 seconds to avoid being rate-limited
-            print("[+] Finished forwarding messages to all groups. Waiting for 20-30 minutes...")
-            print(f"[+] Waiting for 20-30 minutes {Fore.RED} (if you want to exit press ctrl+c to exit){Style.RESET_ALL}")
-            time.sleep(random.uniform(1200, 1800))
-            
+        await forward_to_all(group_ids=groupid, chat_id=saved_messages.id, messages=messages) # type: ignore
     else:
         print("No messages found in Saved Messages.")
     
+    print()
     return
+
+def print_messages(messages):
+    for message in messages:
+        print(f"Message: {message.text}, Message ID: {message.id}")
 
 
 # Scrap members and save into csv file
@@ -333,6 +396,11 @@ async def add_users_to_group(client, target_group_entity, users, input_file):
 # Add members to group
 async def add_members_to_group(client, chats, input_file):
     # Get megagroups from the chats
+
+    if not os.path.exists("members.csv"):
+        print("[!] No CSV file found. Please generate the CSV file first.")
+        return
+    
     groups = get_megagroups(chats)
 
     if not groups:
@@ -361,7 +429,8 @@ async def main():
     '3': lambda: add_members_to_group(client, chats, "members.csv"),
     '4': scrape_members,
     '5': clear_key,
-    '6': exit_the_program,
+    '6': increment_and_switch_account,
+    "7": exit_the_program
     }
     print_intro()
 
@@ -383,19 +452,21 @@ async def main():
         sys.exit()
 
     while True:
+        print_info(me)  # Update the user info in the menu
 
-        print_info(me)
-
-        option = input("Enter number to choose an option : ")
+        option = input("Enter number to choose an option: ")
         action = OPTIONS.get(option)
         if action:
             should_break = await action()
+
+            # After switching accounts, refetch and update user info
+            if option == "6":  # If account switching was triggered
+                me = await client.get_me()  # Fetch new account info after switching
+
             if should_break:
                 break
         else:
             print('Invalid option, please try again.')
-
-
 # Run the main function
 with client:
     client.loop.run_until_complete(main())

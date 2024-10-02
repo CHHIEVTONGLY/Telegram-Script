@@ -11,7 +11,7 @@ import os
 # initalization
 init(autoreset=True)
 
-credentials_file = "credentials.csv"
+credentials_file = "tg_script_accounts.csv"
 
 clients = create_telegram_clients(credentials_file)
 client = clients[0]
