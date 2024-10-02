@@ -49,7 +49,7 @@ async def main():
         '1': lambda: print_all_bots_info(bots),
         '2': lambda: print_all_bots_chat(bots),
         '3': lambda: all_bots_forward(bots),
-        '4': lambda: all_bots_add_members(bots, limit_per_bot=10, members_file="members.csv"),
+        '4': lambda: all_bots_add_members(bots, limit_per_bot=1, members_file="members.csv"),
         '5': lambda: all_bots_scrape_members(bots),
         '6': lambda: all_bots_log_out(bots),
         '7': clean_members,

@@ -51,6 +51,7 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
     target_group_entity = chosen_group['target_group_entity']
 
     remaining_members = []
+    i = 0
     for i, chunk in enumerate(chunks):
         if i >= len(bots):
             # If there are more chunks than bots, treat the remaining chunks as remaining members
@@ -66,6 +67,11 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
         except Exception as e:
             print(f"Error adding members with bot {index}: {e}")
             remaining_members.extend(chunk)
+            break  # Stop processing further chunks if an error occurs
+
+    # Add any remaining chunks to the remaining members list
+    for remaining_chunk in chunks[i+1:]:
+        remaining_members.extend(remaining_chunk)
 
     if remaining_members:
         remaining_file = members_file
