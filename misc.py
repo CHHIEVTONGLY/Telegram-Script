@@ -40,7 +40,7 @@ def read_csv_file(input_file): # also in misc
         for row in rows:
             user = {
                 'username': row[0],
-                'id': int(row[1]),
+                'user_id': int(row[1]),
                 'access_hash': int(row[2]),
                 'name': row[3]
             }

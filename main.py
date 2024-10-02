@@ -1,5 +1,7 @@
 from TelegramBot import TelegramBot
 from misc import print_intro, get_api_credentials, print_info
+from typing import List, Tuple
+
 
 from master_function import (
     print_bot_info,
@@ -14,7 +16,7 @@ from master_function import (
 )
 
 
-def create_telegram_bots(credentials_file="credentials.csv"):
+def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, TelegramBot]]:
     credentials_list = get_api_credentials(credentials_file)
     bots = []
 

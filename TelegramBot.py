@@ -132,8 +132,6 @@ class TelegramBot:
 
 
     async def scrape_members(self, target_group):
-        self.groups.clear()
-
         print(f'[+] Fetching members from group: {target_group.title}')
         time.sleep(1)
 
@@ -222,6 +220,8 @@ class TelegramBot:
 
 
     async def choose_group(self):
+        self.groups.clear()
+
         print(Fore.GREEN + "[+] Available groups:" + Style.RESET_ALL)
         await self.print_chat()
 
