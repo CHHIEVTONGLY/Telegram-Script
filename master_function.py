@@ -1,4 +1,4 @@
-from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input
+from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates
 from typing import List, Tuple
 from TelegramBot import TelegramBot
 
@@ -43,8 +43,6 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
 
     chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
 
-    print(chunks)
-
     if not bots:
         print("[!] No bots available.")
         return
@@ -62,16 +60,16 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
         index, bot = bots[i]
         print(f"Bot {index} is adding members.")
         try:
-            for user in chunk:
+            for user in chunk[:]:
+                chunk.remove(user)
                 await bot.add_U2G(target_group_entity, user)
         except Exception as e:
             print(f"Error adding members with bot {index}: {e}")
             remaining_members.extend(chunk)
-            print(remaining_members)
 
     if remaining_members:
-        remaining_file = "remaining_members.csv"
-        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file, mode='a')
+        remaining_file = members_file
+        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file)
         print(f"Remaining members written to {remaining_file}")
 
     return
@@ -101,6 +99,8 @@ async def all_bots_log_out(bots: List[Tuple[int, TelegramBot]]):
         await bot.log_out()
     return
 
+async def clean_members():
+    remove_duplicates('members.csv', 'members.csv')
 
 async def exit_program():
     exit_the_program()

@@ -242,7 +242,7 @@ class TelegramBot:
 
     def __read_csv_file(self, input_file): # also in misc
         """
-        Read member from CSV with this format username,id,access_hash,name
+        Read member from CSV with this format username,user_id,access_hash,name
         """
 
         users = []
@@ -252,7 +252,7 @@ class TelegramBot:
             for row in rows:
                 user = {
                     'username': row[0],
-                    'id': int(row[1]),
+                    'user_id': int(row[1]),
                     'access_hash': int(row[2]),
                     'name': row[3]
                 }
@@ -277,8 +277,8 @@ class TelegramBot:
                     print(f"[+] Reached the limit of {max_users} users. Stopping.")
                     break
                 
-                user_to_add = InputUser(user['id'], user['access_hash'])
-                print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['id']}")
+                user_to_add = InputUser(user['user_id'], user['access_hash'])
+                print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['user_id']}")
 
                 # Add the user to the group
                 await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
@@ -353,8 +353,8 @@ class TelegramBot:
 
     async def add_U2G(self, target_group_entity, user):
         try:                
-            user_to_add = InputUser(user['id'], user['access_hash'])
-            print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['id']}")
+            user_to_add = InputUser(user['user_id'], user['access_hash'])
+            print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['user_id']}")
 
             # Add the user to the group
             await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))

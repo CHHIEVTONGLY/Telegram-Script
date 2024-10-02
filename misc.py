@@ -48,27 +48,27 @@ def read_csv_file(input_file): # also in misc
     return users
 
 
-# def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv"):
-#     """Write members to a CSV file."""
-#     with open(filename, "w", encoding='UTF-8') as f:
-#         writer = csv.writer(f, delimiter=",", lineterminator="\n")
-#         writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
-
-#         for member in members:
-#             writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
-
-def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv", mode='a'):
+def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv"):
     """Write members to a CSV file."""
-    file_exists = os.path.isfile(filename)
-    
-    with open(filename, mode=mode, encoding='UTF-8') as f:
+    with open(filename, "w", encoding='UTF-8') as f:
         writer = csv.writer(f, delimiter=",", lineterminator="\n")
-        
-        if not file_exists:
-            writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
-        
+        writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
+
         for member in members:
             writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
+
+# def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv", mode='a'):
+#     """Write members to a CSV file."""
+#     file_exists = os.path.isfile(filename)
+    
+#     with open(filename, mode=mode, encoding='UTF-8') as f:
+#         writer = csv.writer(f, delimiter=",", lineterminator="\n")
+        
+#         if not file_exists:
+#             writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
+        
+#         for member in members:
+#             writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
 
 
 def eval_input(prompt: str, lower_limit: int, upper_limit: int, default: int) -> int:
@@ -112,10 +112,27 @@ def print_info():
         4. Add members to group
         5. Scrape members
         6. Log out all bots
-        {Fore.RED}7. Exit the program.{Style.RESET_ALL}   
+        7. Clean members.csv
+        {Fore.RED}8. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)
+
+
+def remove_duplicates(input_file, output_file):
+    unique_rows = set()
+    header = None
+    with open(input_file, 'r', encoding='utf-8') as infile:
+        header = infile.readline()  # Read the header
+        for line in infile:
+            if line not in unique_rows:
+                unique_rows.add(line)
+    
+    with open(output_file, 'w', encoding='utf-8') as outfile:
+        outfile.write(header)
+        for row in unique_rows:
+            outfile.write(row)
+
 
 def exit_the_program():
     print("Exiting the program...")
