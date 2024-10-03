@@ -33,10 +33,14 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
     print(f"Send {limit} messages to each group.")
 
-    for index, bot in bots:
-        print("Forwarding from Bot", index)
-        await bot.forward_message_to_all_groups(limit)
-    return
+    cycle_forward = 0
+
+    while True:
+        cycle_forward += 1
+        print(f"{Back.YELLOW}Forwarding cycles : {Fore.GREEN}{cycle_forward}")
+        for index, bot in bots:
+            print("Forwarding from Bot", index)
+            await bot.forward_message_to_all_groups(limit)
 
 async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
     # Ask the user for the number of groups to join
