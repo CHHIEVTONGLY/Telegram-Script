@@ -354,7 +354,7 @@ class TelegramBot:
     async def add_U2G(self, target_group_entity, user):
         try:                
             user_to_add = InputUser(user['user_id'], user['access_hash'])
-            print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['user_id']}")
+            print(f"[+] Adding user : {user['name']} - ID : {user['user_id']}")
 
             # Add the user to the group
             await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))

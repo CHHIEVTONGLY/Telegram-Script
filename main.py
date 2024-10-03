@@ -1,3 +1,4 @@
+from colorama import Fore , Style , Back
 from TelegramBot import TelegramBot
 from misc import print_intro, get_api_credentials, print_info
 from typing import List, Tuple
@@ -28,8 +29,9 @@ def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, 
         bot = TelegramBot(api_id, api_hash, session_key)
         
         bots.append([i + 1, bot])
-        print(i+1)
+        print(f"{Fore.CYAN}Connecting into bot :{i+1} {Style.RESET_ALL}")
 
+    print("\n-----------------------------------")
     return bots
 
 
@@ -39,7 +41,7 @@ async def main():
     bots = create_telegram_bots()
 
     for i, bot in bots:
-        print(i)
+        print(f"{Fore.GREEN}Sucessfully login into bot :{i} {Style.RESET_ALL}")
         await bot.start()
 
     # Start all bots concurrently

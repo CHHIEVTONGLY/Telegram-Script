@@ -108,9 +108,9 @@ def print_info():
         Options:
         1. Print all bots info
         2. Print all bots chat
-        3. Forward message to all groups
-        4. Add members to group
-        5. Scrape members
+        3. Forward message to all groups{Fore.GREEN} (SAFE 100%) {Style.RESET_ALL}
+        4. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
+        5. Scrape members 
         6. Log out all bots
         7. Clean members.csv
         {Fore.RED}8. Exit the program.{Style.RESET_ALL}   

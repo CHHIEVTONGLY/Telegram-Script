@@ -66,7 +66,7 @@ def print_info(me):
         {Fore.GREEN + user_info + Style.RESET_ALL}
           
         1.Get chat list
-        2.Forward your Last Saved messages to all groups
+        {Fore.GREEN}2.Forward your Last Saved messages to all groups
         3.Add members to a group
         4.Scrape only active users
         5.Clear API KEYs (optional if you enter wrong key on first input)
