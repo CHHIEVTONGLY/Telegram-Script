@@ -1,3 +1,5 @@
+import asyncio
+import random
 from colorama import Fore , Back
 from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates
 from typing import List, Tuple
@@ -37,10 +39,19 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
 
     while True:
         cycle_forward += 1
-        print(f"{Back.YELLOW}Forwarding cycles : {Fore.GREEN}{cycle_forward}")
+        print(f"{Fore.BLUE}Forwarding cycles : {Fore.GREEN}{cycle_forward}")
+        
         for index, bot in bots:
             print("Forwarding from Bot", index)
             await bot.forward_message_to_all_groups(limit)
+
+            delay = random.uniform(120, 160)
+
+            minutes = int(delay // 60)
+            seconds = int(delay % 60)
+
+            print(f"Waiting for {minutes} minutes and {seconds} seconds")
+            await asyncio.sleep(delay)
 
 async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
     # Ask the user for the number of groups to join

@@ -9,3 +9,5 @@ __pycache__/
 dist
 build
 TG_Script.spec
+TG_Script.py
+test
