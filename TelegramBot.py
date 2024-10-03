@@ -71,7 +71,7 @@ class TelegramBot:
     async def __LeaveChannel(self, group_id):
         try:
             await self.client(LeaveChannelRequest(group_id))
-            print(f"[+] Left the group with ID {group_id} due to forwarding failure.")
+            print(f"[+] Left the group with ID {Fore.RED}{group_id}{Style.RESET_ALL} due to forwarding failure.")
         except Exception as leave_error:
             print(f"[!] Failed to leave the group {group_id}: {str(leave_error)}")
 
@@ -80,7 +80,7 @@ class TelegramBot:
         """Forward the message from Chat to the group and leave if it fails."""
         try:
             await self.client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
-            print(f"Message ID {message_id} forwarded to group with ID {group_id}")
+            print(f"{Fore.GREEN}Message ID {message_id} forwarded to group with ID {group_id}{Style.RESET_ALL}")
         except Exception as e:
             print(f"Failed to forward message to group {group_id}: {str(e)}")
             await self.__LeaveChannel(group_id)
