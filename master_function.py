@@ -1,3 +1,4 @@
+from colorama import Fore , Back
 from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates
 from typing import List, Tuple
 from TelegramBot import TelegramBot
@@ -35,6 +36,27 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:
         print("Forwarding from Bot", index)
         await bot.forward_message_to_all_groups(limit)
+    return
+
+async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
+    # Ask the user for the number of groups to join
+    limit = int(input("How many groups to join: "))
+    
+    # Collect multiple invite links
+    invite_links = []
+    for i in range(limit):
+        link = input(f"Input invite link #{i + 1}: ")
+        invite_links.append(link)
+    
+    # Loop through each bot
+    for index, bot in bots:
+        print(f"Bot {index} starting to join groups...")
+        
+        # Loop through each invite link and join the group
+        for link in invite_links:
+            print(f"Bot {index} trying to join: {Fore.YELLOW}{link}")
+            await bot.join_group_via_link(link)
+    
     return
 
 
