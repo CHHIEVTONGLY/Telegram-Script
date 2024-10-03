@@ -5,6 +5,8 @@ from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import UserStatusOffline, InputPeerChannel, InputUser, InputPeerEmpty, User
 from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
 from telethon.tl.functions.channels import LeaveChannelRequest, InviteToChannelRequest
+from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.functions.channels import JoinChannelRequest
 from colorama import Fore, Style, init
 import csv
 import time
@@ -71,7 +73,7 @@ class TelegramBot:
     async def __LeaveChannel(self, group_id):
         try:
             await self.client(LeaveChannelRequest(group_id))
-            print(f"[+] Left the group with ID {group_id} due to forwarding failure.")
+            print(f"[+] Left the group with ID {Fore.RED}{group_id}{Style.RESET_ALL} due to forwarding failure.")
         except Exception as leave_error:
             print(f"[!] Failed to leave the group {group_id}: {str(leave_error)}")
 
@@ -80,7 +82,7 @@ class TelegramBot:
         """Forward the message from Chat to the group and leave if it fails."""
         try:
             await self.client.forward_messages(entity=group_id, messages=message_id, from_peer=from_chat_id)
-            print(f"Message ID {message_id} forwarded to group with ID {group_id}")
+            print(f"{Fore.GREEN}Message ID {message_id} forwarded to group with ID {group_id}{Style.RESET_ALL}")
         except Exception as e:
             print(f"Failed to forward message to group {group_id}: {str(e)}")
             await self.__LeaveChannel(group_id)
@@ -118,6 +120,22 @@ class TelegramBot:
         print()
         return
     
+    async def join_group_via_link(self, invite_link: str):
+        try:
+            if 'joinchat' in invite_link:
+                # For private invite links, extract the invite code
+                invite_code = invite_link.split('/')[-1]
+                print(f"Private group invite code: {invite_code}")
+                await self.client(ImportChatInviteRequest(invite_code))
+            else:
+                # For public groups, use the group username
+                group_username = invite_link.split('/')[-1]
+                print(f"Public group username: {Fore.CYAN}{group_username}")
+                await self.client(JoinChannelRequest(group_username))
+            
+            print(f"{Fore.GREEN}Successfully joined the group.")
+        except Exception as e:
+            print(f"Failed to join the group: {e}")
 
     def __print_messages(self, messages):
         for message in messages:

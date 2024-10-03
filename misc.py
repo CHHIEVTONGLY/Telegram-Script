@@ -111,9 +111,10 @@ def print_info():
         3. Forward message to all groups{Fore.GREEN} (SAFE 100%) {Style.RESET_ALL}
         4. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
         5. Scrape members 
-        6. Log out all bots
-        7. Clean members.csv
-        {Fore.RED}8. Exit the program.{Style.RESET_ALL}   
+        6. Join gp via link
+        7. Log out all bots
+        8. Clean members.csv
+        {Fore.RED}9. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)
