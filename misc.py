@@ -76,8 +76,10 @@ def eval_input(prompt: str, lower_limit: int, upper_limit: int, default: int) ->
     try:
         the_input = int(input(prompt))
         if the_input > upper_limit or the_input < lower_limit:
+            print(f"Setting to Default. Lower Limit is {lower_limit} Upper Limit is {upper_limit}")
             the_input = default
     except:
+        print("Setting to Default. Incorrect Input Type.")
         the_input = default
 
     return the_input

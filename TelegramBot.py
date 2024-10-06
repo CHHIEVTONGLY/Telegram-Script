@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
-from telethon.tl.types import UserStatusOffline, InputPeerChannel, InputUser, InputPeerEmpty, User
+from telethon.tl.types import UserStatusOffline, InputPeerChannel, InputUser, InputPeerEmpty, User, messages
 from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedError
 from telethon.tl.functions.channels import LeaveChannelRequest, InviteToChannelRequest
 from colorama import Fore, Style, init
@@ -11,7 +11,7 @@ import time
 import random
 import traceback
 import os
-
+from misc import eval_input
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -24,9 +24,9 @@ class TelegramBot:
         self.groups_id = []
         self.me = None
 
-
     async def start(self):
-        await self.client.start()
+        await self.client.start() # type: ignore
+
         result = await self.client(GetDialogsRequest(
             offset_date=self.last_date,
             offset_id=0,
@@ -34,7 +34,13 @@ class TelegramBot:
             limit=self.chunk_size,
             hash=0
         ))
-        self.chats.extend(result.chats)
+        if isinstance(result, (messages.Dialogs, messages.DialogsSlice)):
+            self.chats.extend(result.chats)
+        elif isinstance(result, messages.DialogsNotModified):
+            print("Dialogs not modified.")
+        else:
+            print("Unexpected result type.")
+
         await self.__get_me()
 
 
@@ -225,15 +231,11 @@ class TelegramBot:
         print(Fore.GREEN + "[+] Available groups:" + Style.RESET_ALL)
         await self.print_chat()
 
-        g_index = eval(input("[+] Enter a number: "))
-        
-        if type(g_index) != int:
-            print("Invalid Input! Exiting the program...")
-            exit()
+        g_index = eval_input("[+] Enter a Number (Cancel=0): ", 0, len(self.groups), 0)
 
-        if g_index <= 0 or g_index > len(self.groups):
-            print("Invalid group number.")
-            exit()
+        if g_index == 0:
+            print("[!] Cancelled.")
+            return None
 
         target_group = self.groups[g_index - 1]
         target_group_entity = InputPeerChannel(target_group.id, target_group.access_hash)
@@ -329,8 +331,10 @@ class TelegramBot:
         # Let user select the group
         
         chosen_group = await self.choose_group()
-        target_group_entity = chosen_group['target_group_entity']
+        if chosen_group == None: 
+            return
 
+        target_group_entity = chosen_group['target_group_entity']
         # Read the CSV file to get the list of users
         users = self.__read_csv_file(input_file=input_file)
 

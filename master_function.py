@@ -4,14 +4,22 @@ from TelegramBot import TelegramBot
 
 
 async def print_bot_info(bot: TelegramBot):
-    user_info = f"Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''}"
+    if bot.me is None or not hasattr(bot.me, 'first_name') or not hasattr(bot.me, 'last_name'):
+        print("Invalid User?")
+        return
+
+    first_name = getattr(bot.me, 'first_name', 'Unknown')
+    last_name = getattr(bot.me, 'last_name', '')
+    user_info = f"Account name : {first_name} {last_name}"
     print(user_info)
     return
 
 
 async def print_all_bots_info(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:
-        user_info = f"Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''}"
+        first_name = getattr(bot.me, 'first_name', 'Unknown')
+        last_name = getattr(bot.me, 'last_name', '')
+        user_info = f"Account name : {first_name} {last_name}"
         print(index, user_info)
     return
 
@@ -29,8 +37,12 @@ async def print_all_bots_chat(bots: List[Tuple[int, TelegramBot]]):
 
 
 async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
-    limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
-    print(f"Send {limit} messages to each group.")
+    limit = eval_input("How many messages? (Default=1, Cancel=0): ", 0, 10, 1)
+    if limit == 0:
+        print("[!] Cancelled.")
+        return
+    
+    print(f"\nSend {limit} messages to each group.")
 
     for index, bot in bots:
         print("Forwarding from Bot", index)
@@ -38,18 +50,25 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     return
 
 
-async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bot=10, members_file="members.csv"):
-    members = read_csv_file(members_file)
-
-    chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
-
+async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bot:int=10, members_file:str="members.csv"):
     if not bots:
         print("[!] No bots available.")
         return
+    
+    members = read_csv_file(members_file)
+
+    if not members:
+        print("[!] No member to add. Please check 'memebers.csv'")
+        return
+
+    chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
 
     chosen_group = await bots[0][1].choose_group()
+    if chosen_group == None: 
+        return # cancelled
+    
     target_group_entity = chosen_group['target_group_entity']
-
+    
     remaining_members = []
     i = 0
     for i, chunk in enumerate(chunks):
@@ -77,7 +96,9 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
         remaining_file = members_file
         write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file)
         print(f"Remaining members written to {remaining_file}")
-
+    else:
+        open(members_file, 'w').close()
+        print(f"No remaining members. {members_file} has been cleared.")
     return
 
 
@@ -88,10 +109,18 @@ async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
 
     await print_all_bots_chat(bots)
 
-    bot_index = eval_input("Please choose bots to scrape (enter number): ", 0, len(bots) + 1, 1)
+    bot_index = eval_input("Please choose bots to scrape (enter number, Cancel=0): ", 0, len(bots), 0)
+    
+    if bot_index == 0:
+        print("[!] Cancelled.")
+        return
+
 
     bot = bots[bot_index - 1][1]
     chosen_group = await bot.choose_group()
+    if not chosen_group:
+        return
+    
     target_group = chosen_group['target_group']
 
     print(f"Bot {bot_index} is scraping.")
