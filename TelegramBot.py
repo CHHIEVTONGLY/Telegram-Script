@@ -26,6 +26,21 @@ class TelegramBot:
 
     async def start(self):
         await self.client.start() # type: ignore
+        await self.__get_me()
+
+
+    async def __get_me(self):
+        self.me = await self.client.get_me()
+
+        if not isinstance(self.me, User):
+            print("Unexpected error please try again!")
+            exit()
+
+
+    async def __get_chat(self):
+        """Get list of all Megagroup in Chat list."""
+        
+        await self.clear_group()
 
         result = await self.client(GetDialogsRequest(
             offset_date=self.last_date,
@@ -41,19 +56,6 @@ class TelegramBot:
         else:
             print("Unexpected result type.")
 
-        await self.__get_me()
-
-
-    async def __get_me(self):
-        self.me = await self.client.get_me()
-
-        if not isinstance(self.me, User):
-            print("Unexpected error please try again!")
-            exit()
-
-
-    async def __get_chat(self):
-        """Get list of all Megagroup in Chat list."""
         for chat in self.chats:
             if getattr(chat, 'megagroup', False):
                 self.groups.append(chat)
@@ -72,6 +74,12 @@ class TelegramBot:
             print(f"{index + 1} - {chat.title} | ID - {chat.id}")
         print()
         return
+
+
+    async def clear_group(self):
+        self.groups.clear()
+        self.groups_id.clear()
+        print("Groups has been cleared.")
 
 
     async def __LeaveChannel(self, group_id):
@@ -226,8 +234,6 @@ class TelegramBot:
 
 
     async def choose_group(self):
-        self.groups.clear()
-
         print(Fore.GREEN + "[+] Available groups:" + Style.RESET_ALL)
         await self.print_chat()
 

@@ -12,6 +12,7 @@ from master_function import (
     all_bots_forward,
     all_bots_add_members,
     all_bots_scrape_members,
+    all_bots_clear_group,
     all_bots_log_out,
     clean_members,
     exit_program
@@ -53,8 +54,9 @@ async def main():
         '4': lambda: all_bots_add_members(bots, limit_per_bot=6, members_file="members.csv"),
         '5': lambda: all_bots_scrape_members(bots),
         '6': lambda: all_bots_log_out(bots),
-        '7': clean_members,
-        '8': exit_program,
+        '7': lambda: all_bots_clear_group(bots),
+        '8': clean_members,
+        '9': exit_program,
     }
 
     while True:

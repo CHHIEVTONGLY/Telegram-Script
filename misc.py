@@ -114,8 +114,9 @@ def print_info():
         4. Add members to group
         5. Scrape members
         6. Log out all bots
-        7. Clean members.csv
-        {Fore.RED}8. Exit the program.{Style.RESET_ALL}   
+        7. All bots clear groups. Get updated chats.
+        8. Clean members.csv
+        {Fore.RED}9. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)

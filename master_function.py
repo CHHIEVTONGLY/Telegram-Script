@@ -63,12 +63,7 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
 
     chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
 
-    chosen_group = await bots[0][1].choose_group()
-    if chosen_group == None: 
-        return # cancelled
-    
-    target_group_entity = chosen_group['target_group_entity']
-    
+
     remaining_members = []
     i = 0
     for i, chunk in enumerate(chunks):
@@ -76,6 +71,24 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bo
             # If there are more chunks than bots, treat the remaining chunks as remaining members
             remaining_members.extend(chunk)
             continue
+
+        print("Choose group to scrape from.")
+        chosen_group = await bots[i][1].choose_group()
+        if not chosen_group:
+            return
+
+        target_group = chosen_group['target_group']
+
+        print(f"Bot {i+1} is scraping.")
+        await bot.scrape_members(target_group)
+
+        print("Choose group to add user to.")        
+        chosen_group = await bots[i][1].choose_group()
+        if not chosen_group: 
+            return
+        
+        target_group_entity = chosen_group['target_group_entity']
+        print(chosen_group)
 
         index, bot = bots[i]
         print(f"Bot {index} is adding members.")
@@ -126,6 +139,16 @@ async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
     print(f"Bot {bot_index} is scraping.")
     await bot.scrape_members(target_group)
     return
+
+
+async def bot_clear_group(bot: TelegramBot):
+    await bot.clear_group()
+
+
+async def all_bots_clear_group(bots: List[Tuple[int, TelegramBot]]):
+    for index, bot in bots:
+        print(f"Bot {index} has cleared groups.")
+        await bot_clear_group(bot)
 
 
 async def all_bots_log_out(bots: List[Tuple[int, TelegramBot]]):
