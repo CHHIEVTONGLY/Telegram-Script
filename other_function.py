@@ -75,6 +75,32 @@ def read_csv_file(csv_file):
 
     return user_acc
 
+def delete_first_100_rows(csv_file):
+    try:
+        # Read all rows from the CSV file
+        with open(csv_file, 'r', newline='', encoding='utf-8') as file:
+            reader = list(csv.reader(file))
+
+            # Ensure there are rows to delete after the header
+            if len(reader) > 101:  # 1 for the header, 100 for the rows to remove
+                header = reader[0]  # Keep the header intact
+                rows_to_keep = reader[101:]  # Keep rows starting from the 102nd row
+            else:
+                print(f"[!] File has fewer than 101 rows (including the header). Cannot remove 100 rows.")
+                return
+
+        # Write the header and remaining rows back into the same CSV file
+        with open(csv_file, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(header)  # Write the header
+            writer.writerows(rows_to_keep)  # Write remaining rows
+
+        print(f"[+] Successfully deleted the first 100 data rows (keeping the header) from {csv_file}")
+
+    except FileNotFoundError:
+        print(f"[!] File {csv_file} not found.")
+    except Exception as e:
+        print(f"[!] An error occurred: {str(e)}")
 
 def print_intro():
 

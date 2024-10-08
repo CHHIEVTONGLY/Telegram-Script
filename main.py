@@ -18,6 +18,8 @@ from master_function import (
     all_bots_join_group,
 )
 
+from other_function import delete_first_100_rows
+
 
 def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, TelegramBot]]:
     credentials_list = get_api_credentials(credentials_file)
@@ -57,7 +59,8 @@ async def main():
         '6': lambda : all_bots_join_group(bots),
         '7': lambda: all_bots_log_out(bots),
         '8': clean_members,
-        '9': exit_program,
+        '9': lambda: delete_first_100_rows("members.csv"),
+        '10': exit_program,
     }
 
     while True:

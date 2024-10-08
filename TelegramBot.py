@@ -174,12 +174,24 @@ class TelegramBot:
                 print(f"Skipping deleted user: {first_name} {last_name} (ID: {user.id})")  # Debugging line
                 continue
 
+            # Skip users without a username
+            if not user.username:
+                print(f"Skipping user with no username (ID: {user.id})")
+                continue
+            
+            # Skip users whose username starts with 'user_'
+            if user.username.startswith("user_"):
+                print(f"Skipping user with 'user_' username: {user.username} (ID: {user.id})")
+                continue
+
+            # Gather user info for valid users
             user_info = self.__get_user_info(user)
             if user_info:
                 members_to_write.append(user_info)
 
+        # Write filtered members to CSV
         self.__write_members_to_csv(members_to_write, target_group.title, target_group.id)
-        print('[+] Members with usernames scraped successfully.')
+        print('[+] Members with valid usernames scraped successfully.')
 
     def __get_user_info(self, user):
         """Get user information if the user was online today."""
@@ -357,6 +369,7 @@ class TelegramBot:
             except Exception as e:
                 failed_adds += 1
                 print(f"[-] Unexpected error occurred while adding {username}: {str(e)}")
+                if failed_adds == 5 : break
 
             # Add a delay between user addition to avoid rate limits
             delay = random.uniform(10, 30)  # Delay between 10 and 30 seconds

@@ -74,6 +74,7 @@ async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
     
     return
 
+
 async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file="members.csv"):
     # Read the CSV file
     try:
@@ -93,9 +94,9 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
         print(f"{Fore.RED}[!] No bots available.{Style.RESET_ALL}")
         return
 
-    # Let user choose the target group
+    # Let the user choose the target group once, using the first bot for simplicity
     chosen_group = await bots[0][1].choose_group()
-    target_group_entity = chosen_group['target_group']
+    target_group_entity = chosen_group['target_group']  # This contains all the necessary info like access hash
 
     # Distribute members among bots
     members_per_bot = len(members) // len(bots)
@@ -113,6 +114,7 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
         print(f"{Fore.CYAN}Bot {index} is adding {len(bot_members)} users.{Style.RESET_ALL}")
         
         try:
+            # Pass the same target_group_entity to all bots, so they add to the same group
             failed_members = await bot.add_users_to_group(target_group_entity, bot_members)
             all_failed_members.extend(failed_members)
         except Exception as e:
@@ -125,7 +127,6 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
         failed_file = "failed_members.csv"
         write_members_to_csv(all_failed_members, "Failed Users", target_group_entity.id, filename=failed_file)
         print(f"{Fore.YELLOW}[+] Failed additions have been saved to {failed_file}{Style.RESET_ALL}")
-
 
 async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
     if not bots:

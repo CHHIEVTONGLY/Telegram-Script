@@ -113,7 +113,8 @@ def print_info():
         6. Join gp via link
         7. Log out all bots
         8. Clean members.csv
-        {Fore.RED}9. Exit the program.{Style.RESET_ALL}   
+        9. Delete 100 row members
+        {Fore.RED}10. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)
