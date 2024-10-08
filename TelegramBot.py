@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import pytz
 from telethon import TelegramClient
@@ -212,10 +213,10 @@ class TelegramBot:
             writer = csv.writer(f, delimiter=",", lineterminator="\n")
             
             if not file_exists:
-                writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
+                writer.writerow(['username', 'user_id', 'name', 'group', 'group_id'])
             
             for member in members:
-                writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
+                writer.writerow([member['username'], member['user_id'], member['name'], target_group_title, target_group_id])
 
 
     async def log_out(self):
@@ -271,63 +272,69 @@ class TelegramBot:
                 user = {
                     'username': row[0],
                     'user_id': int(row[1]),
-                    'access_hash': int(row[2]),
-                    'name': row[3]
+                    'name': row[2]
                 }
                 users.append(user)
         return users
-
-
-    async def add_users_to_group(self, target_group_entity, users, input_file):
-        print("1.Adding users by timestamp to group")
-        print("2.Adding users by set limit to group")
-        
-        mode = int(input("Choose an option: "))
-
-        if mode == 2:
-            max_users = int(input("Enter the maximum number of users to add: "))
-
-        users_added = 0
-
-        for user in users[:]:  # iterating over a copy of the list so we can modify it
+    
+    async def add_user_by_username(self, target_group_entity, user_data):
             try:
-                if mode == 2 and users_added >= max_users:
-                    print(f"[+] Reached the limit of {max_users} users. Stopping.")
-                    break
                 
-                user_to_add = InputUser(user['user_id'], user['access_hash'])
-                print(f"[+] Adding user : {user['name']} + ' - ID : ' {user['user_id']}")
+                username = user_data['username']
 
+                if username.startswith("user_"):
+                    print(f"{Fore.YELLOW}[!] Skipping user: {username} because it starts with 'user_'{Style.RESET_ALL}")
+                    
+                    # Remove the user from the CSV
+                    remove_user_from_csv(username, "members.csv")
+                    return False  # Skip the rest of the process
+                    
+                    
+                print(f"[+] Attempting to add user: {username} ({user_data['name']})")
+                
+                # Resolve the username to get the user entity
+                user_to_add = await self.client.get_input_entity(username)
+                
                 # Add the user to the group
                 await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
-                print("[+] User successfully added. Removing user from list.")
+                print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
                 
-                # Remove user from the list after successfully adding
-                users.remove(user)
-
-                users_added += 1
-
                 # Wait between 10 to 30 seconds to avoid getting rate-limited
-                print("[+] Waiting for 10-30 seconds before adding the next user...")
-                time.sleep(random.uniform(10, 30))
+                delay = random.uniform(10, 30)
+                print(f"[+] Waiting for {delay:.2f} seconds before next action...")
+                await asyncio.sleep(delay)
+                return True
 
+            except ValueError as e:
+                print(f"{Fore.RED}[!] Could not find user with username: {username}{Style.RESET_ALL}")
+                return False
             except PeerFloodError:
-                print("[!] Flood error from Telegram. Saving remaining users back to CSV and stopping the script.")
-                self.__write_members_to_csv(users, "Remaining Users", target_group_entity.id)
-                break  # Stop adding more users to prevent more flood errors
-
+                print(f"{Fore.RED}[!] Flood error from Telegram. Stopping for now.{Style.RESET_ALL}")
+                raise
             except UserPrivacyRestrictedError:
-                print("[!] The user's privacy settings prevent this action. Skipping to the next user.")
-                users.remove(user)  # Remove from the list even if we skip due to privacy settings
-
+                print(f"{Fore.YELLOW}[!] The user's ({username}) privacy settings prevent this action.{Style.RESET_ALL}")
+                return False
             except Exception as e:
-                print(f"[!] Unexpected error: {e}")
-                traceback.print_exc()
-                continue  # Continue to the next user in case of any other exception
+                print(f"{Fore.RED}[!] Unexpected error while adding {username}: {str(e)}{Style.RESET_ALL}")
+                return False
+            
 
-        # If there are still users left, save them back to the CSV
-        if users:
-            self.__write_members_to_csv(users, "Remaining Users", target_group_entity.id)
+    async def add_users_to_group(self, target_group_entity, usernames):
+        successful_adds = 0
+        failed_adds = 0
+        
+        for username in usernames:
+            try:
+                success = await self.add_user_by_username(target_group_entity, username)
+                if success:
+                    successful_adds += 1
+                else:
+                    failed_adds += 1
+            except PeerFloodError:
+                print(f"[!] Stopping due to flood error. Successfully added {successful_adds} users, failed to add {failed_adds} users.")
+                break
+        
+        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.")
 
 
     async def add_members_to_group(self, input_file):
@@ -371,8 +378,10 @@ class TelegramBot:
 
     async def add_U2G(self, target_group_entity, user):
         try:                
-            user_to_add = InputUser(user['user_id'], user['access_hash'])
-            print(f"[+] Adding user : {user['name']} - ID : {user['user_id']}")
+
+            if 'username' in user['username']:
+                user_to_add = InputUser(user['username'])
+                print(f"[+] Adding user : {user['name']} - ID : {user['user_id']}")
 
             # Add the user to the group
             await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
@@ -392,3 +401,22 @@ class TelegramBot:
             print(f"[!] Unexpected error: {e}")
             traceback.print_exc()
             
+
+    # Function to remove the user from the CSV
+def remove_user_from_csv(username_to_remove, csv_file):
+    try:
+        # Read the CSV and filter out the user with username 'user_'
+        with open(csv_file, 'r', newline='', encoding='utf-8') as infile:
+            reader = csv.DictReader(infile)
+            rows = [row for row in reader if row['username'] != username_to_remove]
+
+        # Write the filtered data back to the CSV
+        with open(csv_file, 'w', newline='', encoding='utf-8') as outfile:
+            writer = csv.DictWriter(outfile, fieldnames=reader.fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        print(f"{Fore.GREEN}[+] User {username_to_remove} removed from {csv_file}{Style.RESET_ALL}")
+
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error while removing user from CSV: {str(e)}{Style.RESET_ALL}")

@@ -41,8 +41,7 @@ def read_csv_file(input_file): # also in misc
             user = {
                 'username': row[0],
                 'user_id': int(row[1]),
-                'access_hash': int(row[2]),
-                'name': row[3]
+                'name': row[2]
             }
             users.append(user)
     return users
@@ -52,10 +51,10 @@ def write_members_to_csv(members, target_group_title, target_group_id, filename=
     """Write members to a CSV file."""
     with open(filename, "w", encoding='UTF-8') as f:
         writer = csv.writer(f, delimiter=",", lineterminator="\n")
-        writer.writerow(['username', 'user_id', 'access_hash', 'name', 'group', 'group_id'])
+        writer.writerow(['username', 'user_id', 'name', 'group', 'group_id'])
 
         for member in members:
-            writer.writerow([member['username'], member['user_id'], member['access_hash'], member['name'], target_group_title, target_group_id])
+            writer.writerow([member['username'], member['user_id'], member['name'], target_group_title, target_group_id])
 
 # def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv", mode='a'):
 #     """Write members to a CSV file."""

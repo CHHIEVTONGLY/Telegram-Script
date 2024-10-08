@@ -1,6 +1,6 @@
 import asyncio
 import random
-from colorama import Fore , Back
+from colorama import Fore , Back, Style
 from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates
 from typing import List, Tuple
 from TelegramBot import TelegramBot
@@ -74,48 +74,57 @@ async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
     
     return
 
-
-async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], limit_per_bot=10, members_file="members.csv"):
-    members = read_csv_file(members_file)
-
-    chunks = [members[i:i + limit_per_bot] for i in range(0, len(members), limit_per_bot)]
-
-    if not bots:
-        print("[!] No bots available.")
+async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file="members.csv"):
+    # Read the CSV file
+    try:
+        members = read_csv_file(members_file)
+    except FileNotFoundError:
+        print(f"{Fore.RED}[!] File {members_file} not found.{Style.RESET_ALL}")
+        return
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error reading CSV file: {str(e)}{Style.RESET_ALL}")
         return
 
+    if not members:
+        print(f"{Fore.YELLOW}[!] No members found in the CSV file.{Style.RESET_ALL}")
+        return
+
+    if not bots:
+        print(f"{Fore.RED}[!] No bots available.{Style.RESET_ALL}")
+        return
+
+    # Let user choose the target group
     chosen_group = await bots[0][1].choose_group()
-    target_group_entity = chosen_group['target_group_entity']
+    target_group_entity = chosen_group['target_group']
 
-    remaining_members = []
-    i = 0
-    for i, chunk in enumerate(chunks):
-        if i >= len(bots):
-            # If there are more chunks than bots, treat the remaining chunks as remaining members
-            remaining_members.extend(chunk)
-            continue
+    # Distribute members among bots
+    members_per_bot = len(members) // len(bots)
+    extra_members = len(members) % len(bots)
 
-        index, bot = bots[i]
-        print(f"Bot {index} is adding members.")
+    start_idx = 0
+    all_failed_members = []
+
+    for i, (index, bot) in enumerate(bots):
+        # Calculate how many members this bot should handle
+        bot_members_count = members_per_bot + (1 if i < extra_members else 0)
+        end_idx = start_idx + bot_members_count
+        
+        bot_members = members[start_idx:end_idx]
+        print(f"{Fore.CYAN}Bot {index} is adding {len(bot_members)} users.{Style.RESET_ALL}")
+        
         try:
-            for user in chunk[:]:
-                chunk.remove(user)
-                await bot.add_U2G(target_group_entity, user)
+            failed_members = await bot.add_users_to_group(target_group_entity, bot_members)
+            all_failed_members.extend(failed_members)
         except Exception as e:
-            print(f"Error adding members with bot {index}: {e}")
-            remaining_members.extend(chunk)
-            break  # Stop processing further chunks if an error occurs
+            print(f"{Fore.RED}Error with bot {index}: {e}{Style.RESET_ALL}")
+            all_failed_members.extend(bot_members)
+        
+        start_idx = end_idx
 
-    # Add any remaining chunks to the remaining members list
-    for remaining_chunk in chunks[i+1:]:
-        remaining_members.extend(remaining_chunk)
-
-    if remaining_members:
-        remaining_file = members_file
-        write_members_to_csv(remaining_members, "Remaining Users", 0, filename=remaining_file)
-        print(f"Remaining members written to {remaining_file}")
-
-    return
+    if all_failed_members:
+        failed_file = "failed_members.csv"
+        write_members_to_csv(all_failed_members, "Failed Users", target_group_entity.id, filename=failed_file)
+        print(f"{Fore.YELLOW}[+] Failed additions have been saved to {failed_file}{Style.RESET_ALL}")
 
 
 async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
