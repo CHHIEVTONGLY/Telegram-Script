@@ -322,21 +322,50 @@ class TelegramBot:
     async def add_users_to_group(self, target_group_entity, usernames):
         successful_adds = 0
         failed_adds = 0
-        
+        flood_error_count = 0
+        max_flood_errors = 3  # Maximum number of flood errors allowed before stopping
+
         for username in usernames:
             try:
                 success = await self.add_user_by_username(target_group_entity, username)
+
                 if success:
                     successful_adds += 1
+                    print(f"{Fore.GREEN}[+] Successfully added {username}. Total successful: {successful_adds}")
+                    # If 5 users have been successfully added, stop the loop
+                    if successful_adds == 5:
+                        print("[+] Reached the limit of 5 successful adds for this bot.")
+                        break
                 else:
                     failed_adds += 1
+                    print(f"[-] Failed to add {username}. Total failed: {failed_adds}")
+                    if failed_adds == 3 : 
+                        print(f"{Fore.RED}[+] Failed reached the limit of 3 failed")
+                        break
+
             except PeerFloodError:
-                print(f"[!] Stopping due to flood error. Successfully added {successful_adds} users, failed to add {failed_adds} users.")
-                break
+                flood_error_count += 1
+                print(f"[!] Flood error occurred. Current flood error count: {flood_error_count}")
+                if flood_error_count >= max_flood_errors:
+                    print(f"{Fore.RED}[!] Stopping due to multiple flood errors. Total successful: {successful_adds}, total failed: {failed_adds}")
+                    break
+
+            except UserPrivacyRestrictedError:
+                failed_adds += 1
+                print(f"[-] Could not add {username} due to privacy restrictions.")
+
+            except Exception as e:
+                failed_adds += 1
+                print(f"[-] Unexpected error occurred while adding {username}: {str(e)}")
+
+            # Add a delay between user addition to avoid rate limits
+            delay = random.uniform(10, 30)  # Delay between 10 and 30 seconds
+            print(f"[+] Waiting for {delay:.2f} seconds before adding the next user...")
+            await asyncio.sleep(delay)
+
+        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.") 
+
         
-        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.")
-
-
     async def add_members_to_group(self, input_file):
         """
         Add members to a group
