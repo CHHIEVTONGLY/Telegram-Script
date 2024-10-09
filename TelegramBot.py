@@ -305,7 +305,7 @@ class TelegramBot:
             await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
             print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
 
-            delay = random.uniform(1, 5)
+            delay = random.uniform(1, 3)
             print(f"[+] Waiting for {delay:.2f} seconds before next action...")
             await asyncio.sleep(delay)
             return True
