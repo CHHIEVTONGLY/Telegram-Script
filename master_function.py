@@ -94,10 +94,6 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
         print(f"{Fore.RED}[!] No bots available.{Style.RESET_ALL}")
         return
 
-    # Let the user choose the target group once, using the first bot for simplicity
-    chosen_group = await bots[0][1].choose_group()
-    target_group_entity = chosen_group['target_group']  # This contains all the necessary info like access hash
-
     # Distribute members among bots
     members_per_bot = len(members) // len(bots)
     extra_members = len(members) % len(bots)
@@ -106,27 +102,41 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
     all_failed_members = []
 
     for i, (index, bot) in enumerate(bots):
-        # Calculate how many members this bot should handle
-        bot_members_count = members_per_bot + (1 if i < extra_members else 0)
-        end_idx = start_idx + bot_members_count
-        
-        bot_members = members[start_idx:end_idx]
-        print(f"{Fore.CYAN}Bot {index} is adding {len(bot_members)} users.{Style.RESET_ALL}")
+        # Let each bot choose the target group
+        print(f"{Fore.CYAN}Bot {index} is selecting the group to add members to.{Style.RESET_ALL}")
         
         try:
-            # Pass the same target_group_entity to all bots, so they add to the same group
+            # Each bot prompts for a group selection
+            chosen_group = await bot.choose_group()  # Bot-specific group selection
+            target_group_entity = chosen_group['target_group']  # Contains group info like access hash
+            
+            if not target_group_entity:
+                print(f"{Fore.RED}[!] Invalid group entity for bot {index}. Skipping.{Style.RESET_ALL}")
+                continue
+
+            # Calculate how many members this bot should handle
+            bot_members_count = members_per_bot + (1 if i < extra_members else 0)
+            end_idx = start_idx + bot_members_count
+            
+            bot_members = members[start_idx:end_idx]
+            print(f"{Fore.CYAN}Bot {index} is adding {len(bot_members)} users to the selected group.{Style.RESET_ALL}")
+            
+            # Attempt to add members to the selected group
             failed_members = await bot.add_users_to_group(target_group_entity, bot_members)
             all_failed_members.extend(failed_members)
+        
         except Exception as e:
             print(f"{Fore.RED}Error with bot {index}: {e}{Style.RESET_ALL}")
             all_failed_members.extend(bot_members)
         
         start_idx = end_idx
 
+    # Save failed members to a CSV file
     if all_failed_members:
         failed_file = "failed_members.csv"
         write_members_to_csv(all_failed_members, "Failed Users", target_group_entity.id, filename=failed_file)
         print(f"{Fore.YELLOW}[+] Failed additions have been saved to {failed_file}{Style.RESET_ALL}")
+
 
 async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
     if not bots:

@@ -147,8 +147,6 @@ class TelegramBot:
         for group_id in group_ids:
             for message in messages:
                 await self.forward_message_to_group(group_id, chat_id, message.id)
-                time.sleep(self.sleep_time)
-
 
     async def scrape_members(self, target_group):
         print(f'[+] Fetching members from group: {target_group.title}')
@@ -290,52 +288,48 @@ class TelegramBot:
         return users
     
     async def add_user_by_username(self, target_group_entity, user_data):
-            try:
-                
-                username = user_data['username']
+        try:
+            username = user_data['username']
 
-                if username.startswith("user_"):
-                    print(f"{Fore.YELLOW}[!] Skipping user: {username} because it starts with 'user_'{Style.RESET_ALL}")
-                    
-                    # Remove the user from the CSV
-                    remove_user_from_csv(username, "members.csv")
-                    return False  # Skip the rest of the process
-                    
-                    
-                print(f"[+] Attempting to add user: {username} ({user_data['name']})")
-                
-                # Resolve the username to get the user entity
-                user_to_add = await self.client.get_input_entity(username)
-                
-                # Add the user to the group
-                await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
-                print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
-                
-                # Wait between 10 to 30 seconds to avoid getting rate-limited
-                delay = random.uniform(10, 30)
-                print(f"[+] Waiting for {delay:.2f} seconds before next action...")
-                await asyncio.sleep(delay)
-                return True
+            if username.startswith("user_"):
+                print(f"{Fore.YELLOW}[!] Skipping user: {username} because it starts with 'user_'{Style.RESET_ALL}")
+                remove_user_from_csv(username, "members.csv")
+                return False  # Skip the rest of the process
 
-            except ValueError as e:
-                print(f"{Fore.RED}[!] Could not find user with username: {username}{Style.RESET_ALL}")
-                return False
-            except PeerFloodError:
-                print(f"{Fore.RED}[!] Flood error from Telegram. Stopping for now.{Style.RESET_ALL}")
-                raise
-            except UserPrivacyRestrictedError:
-                print(f"{Fore.YELLOW}[!] The user's ({username}) privacy settings prevent this action.{Style.RESET_ALL}")
-                return False
-            except Exception as e:
-                print(f"{Fore.RED}[!] Unexpected error while adding {username}: {str(e)}{Style.RESET_ALL}")
-                return False
+            print(f"[+] Attempting to add user: {username} ({user_data['name']})")
+
+            # Resolve the username to get the user entity
+            user_to_add = await self.client.get_input_entity(username)
+
+            # Add the user to the group
+            await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
+            print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
+
+            # Wait between 10 to 30 seconds to avoid getting rate-limited
+            delay = random.uniform(10, 30)
+            print(f"[+] Waiting for {delay:.2f} seconds before next action...")
+            await asyncio.sleep(delay)
+            return True
+
+        except ValueError as e:
+            print(f"{Fore.RED}[!] Could not find user with username: {username}{Style.RESET_ALL}")
+            return False
+        except PeerFloodError:
+            print(f"{Fore.RED}[!] Flood error from Telegram. Stopping for now.{Style.RESET_ALL}")
+            raise
+        except UserPrivacyRestrictedError:
+            print(f"{Fore.YELLOW}[!] The user's ({username}) privacy settings prevent this action.{Style.RESET_ALL}")
+            return False
+        except Exception as e:
+            print(f"{Fore.RED}[!] Unexpected error while adding {username}: {str(e)}{Style.RESET_ALL}")
+            return False
             
 
     async def add_users_to_group(self, target_group_entity, usernames):
         successful_adds = 0
         failed_adds = 0
         flood_error_count = 0
-        max_flood_errors = 3  # Maximum number of flood errors allowed before stopping
+        max_flood_errors = 3  # Define your flood error limit here
 
         for username in usernames:
             try:
@@ -351,7 +345,7 @@ class TelegramBot:
                 else:
                     failed_adds += 1
                     print(f"[-] Failed to add {username}. Total failed: {failed_adds}")
-                    if failed_adds == 3 : 
+                    if failed_adds == 3:
                         print(f"{Fore.RED}[+] Failed reached the limit of 3 failed")
                         break
 
@@ -369,15 +363,15 @@ class TelegramBot:
             except Exception as e:
                 failed_adds += 1
                 print(f"[-] Unexpected error occurred while adding {username}: {str(e)}")
-                if failed_adds == 5 : break
+                if failed_adds == 5:
+                    break
 
             # Add a delay between user addition to avoid rate limits
             delay = random.uniform(10, 30)  # Delay between 10 and 30 seconds
             print(f"[+] Waiting for {delay:.2f} seconds before adding the next user...")
             await asyncio.sleep(delay)
 
-        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.") 
-
+        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.")
         
     async def add_members_to_group(self, input_file):
         """
