@@ -1,6 +1,7 @@
 import os
 import csv
 from colorama import Fore, Back, Style, init
+import pandas as pd
 from telethon import TelegramClient
 
 init(autoreset=True)
@@ -77,14 +78,19 @@ def read_csv_file(csv_file):
 
 def delete_first_100_rows(csv_file):
     try:
+        df = pd.read_csv('members.csv')
+        username_count = df['username'].dropna().count()
+        print(f"{Fore.LIGHTGREEN_EX}Total usernames: {username_count}")
+        row_delete = int(input("How many rows u want to delete : "))
         # Read all rows from the CSV file
         with open(csv_file, 'r', newline='', encoding='utf-8') as file:
             reader = list(csv.reader(file))
 
+
             # Ensure there are rows to delete after the header
             if len(reader) > 101:  # 1 for the header, 100 for the rows to remove
                 header = reader[0]  # Keep the header intact
-                rows_to_keep = reader[101:]  # Keep rows starting from the 102nd row
+                rows_to_keep = reader[row_delete:]  # Keep rows starting from the 102nd row
             else:
                 print(f"[!] File has fewer than 101 rows (including the header). Cannot remove 100 rows.")
                 return
@@ -96,6 +102,7 @@ def delete_first_100_rows(csv_file):
             writer.writerows(rows_to_keep)  # Write remaining rows
 
         print(f"[+] Successfully deleted the first 100 data rows (keeping the header) from {csv_file}")
+        return
 
     except FileNotFoundError:
         print(f"[!] File {csv_file} not found.")

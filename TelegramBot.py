@@ -305,8 +305,7 @@ class TelegramBot:
             await self.client(InviteToChannelRequest(target_group_entity, [user_to_add]))
             print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
 
-            # Wait between 10 to 30 seconds to avoid getting rate-limited
-            delay = random.uniform(10, 30)
+            delay = random.uniform(1, 5)
             print(f"[+] Waiting for {delay:.2f} seconds before next action...")
             await asyncio.sleep(delay)
             return True
@@ -338,7 +337,6 @@ class TelegramBot:
                 if success:
                     successful_adds += 1
                     print(f"{Fore.GREEN}[+] Successfully added {username}. Total successful: {successful_adds}")
-                    # If 5 users have been successfully added, stop the loop
                     if successful_adds == 5:
                         print("[+] Reached the limit of 5 successful adds for this bot.")
                         break
@@ -367,7 +365,7 @@ class TelegramBot:
                     break
 
             # Add a delay between user addition to avoid rate limits
-            delay = random.uniform(10, 30)  # Delay between 10 and 30 seconds
+            delay = random.uniform(1, 3)  
             print(f"[+] Waiting for {delay:.2f} seconds before adding the next user...")
             await asyncio.sleep(delay)
 

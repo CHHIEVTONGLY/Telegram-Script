@@ -69,7 +69,13 @@ async def main():
         option = input("Enter number to choose an option: ")
         action = OPTIONS.get(option)
         if action:
-            await action()
+            if callable(action): 
+                if asyncio.iscoroutinefunction(action):
+                    await action()
+                else:
+                    action() 
+            else:
+                print("Selected option is not a valid action.")
         else:
             print('Invalid option, please try again.')
 
