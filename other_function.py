@@ -3,6 +3,7 @@ import csv
 from colorama import Fore, Back, Style, init
 import pandas as pd
 from telethon import TelegramClient
+from misc import count_rows_in_csv
 
 init(autoreset=True)
 
@@ -78,9 +79,7 @@ def read_csv_file(csv_file):
 
 def delete_first_100_rows(csv_file):
     try:
-        df = pd.read_csv('members.csv')
-        username_count = df['username'].dropna().count()
-        print(f"{Fore.LIGHTGREEN_EX}Total usernames: {username_count}")
+        count_rows_in_csv('members.csv')
         row_delete = int(input("How many rows u want to delete : "))
         # Read all rows from the CSV file
         with open(csv_file, 'r', newline='', encoding='utf-8') as file:

@@ -1,6 +1,7 @@
 import os
 import csv
 from colorama import Fore, Back, Style, init
+import pandas as pd
 
 
 init(autoreset=True)
@@ -133,6 +134,17 @@ def remove_duplicates(input_file, output_file):
         outfile.write(header)
         for row in unique_rows:
             outfile.write(row)
+        
+def count_rows_in_csv(filename):
+    try:
+        df = pd.read_csv(filename)
+        row_count = len(df)  # Get the number of rows
+        print(f"{Fore.LIGHTMAGENTA_EX}Total members in {filename}: {row_count}")
+        return row_count
+    except FileNotFoundError:
+        print(f"[!] File {filename} not found.")
+    except Exception as e:
+        print(f"[!] Error reading CSV file: {str(e)}")
 
 
 def exit_the_program():

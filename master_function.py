@@ -1,10 +1,11 @@
 import asyncio
+import os
 import random
+import sys
 from colorama import Fore , Back, Style
-from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates
+from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates , count_rows_in_csv
 from typing import List, Tuple
 from TelegramBot import TelegramBot
-import pandas as pd
 
 
 async def print_bot_info(bot: TelegramBot):
@@ -80,9 +81,7 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
     # Read the CSV file
     try:
         members = read_csv_file(members_file)
-        df = pd.read_csv('members.csv')
-        username_count = df['username'].dropna().count()
-        print(f"{Fore.LIGHTGREEN_EX}Total usernames: {username_count}")
+        count_rows_in_csv('members.csv')
     except FileNotFoundError:
         print(f"{Fore.RED}[!] File {members_file} not found.{Style.RESET_ALL}")
         return
@@ -167,7 +166,9 @@ async def all_bots_log_out(bots: List[Tuple[int, TelegramBot]]):
     return
 
 async def clean_members():
-    remove_duplicates('members.csv', 'members.csv')
+    os.remove('members.csv')
+    print(f"{Fore.GREEN}[+]Delete members.csv sucessfully")
+    return
 
 async def exit_program():
     exit_the_program()

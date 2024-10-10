@@ -4,14 +4,14 @@ from cx_Freeze import setup, Executable
 executable = Executable(
     script="main.py",  # Your Python script
     base=None,  # For GUI apps, you might use "Win32GUI"
-    icon=r"C:\Users\Admin\Downloads\tg.ico",  # Path to your icon file
+    icon=r"C:\\Users\\Admin\\Downloads\\tg.ico",  # Path to your icon file
     target_name="TG_Script.exe"  # The desired output executable name
 )
 
 # Setup configuration
 setup(
     name="Telegram Script by LCT",
-    version="2.0",
+    version="2.2",
     description="Telegram Script by LCT",
     executables=[executable]  # Use the executable object here
 )
