@@ -29,6 +29,8 @@ class TelegramBot:
         self.groups = []
         self.groups_id = []
         self.me = None
+        restricted = False
+
 
 
     async def start(self):
@@ -52,6 +54,7 @@ class TelegramBot:
             exit()
 
     async def check_spam(self):
+        self.restricted = False
         @self.client.on(events.NewMessage(from_users='SpamBot'))
         async def handler(event):
             message = event.message.text
@@ -60,6 +63,7 @@ class TelegramBot:
             if match: 
                 release_date = match.group(1)
                 print(f"{Fore.LIGHTRED_EX}Release date : {release_date}")
+                self.restricted = True
             else:
                 print(f"{Fore.LIGHTGREEN_EX}This bot is free ")
         
@@ -68,6 +72,8 @@ class TelegramBot:
 
         print(f"Waiting for SpamBot response for {str(self.me.first_name) + " " +str(self.me.last_name)}")
         await asyncio.sleep(1)  
+
+        return self.restricted
 
     async def __get_chat(self):
         """Get list of all Megagroup in Chat list."""
