@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import os
 import random
 import sys
@@ -15,8 +16,16 @@ async def print_bot_info(bot: TelegramBot):
 
 
 async def print_all_bots_info(bots: List[Tuple[int, TelegramBot]]):
+    api_sessions = []  # To store the session keys from the CSV
+
+    # Reading the CSV file and storing the session keys
+    with open("credentials.csv", "r") as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            api_sessions.append(row["session_key"])
+
     for index, bot in bots:
-        user_info = f"Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''}"
+        user_info = f"Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''} , {Fore.BLUE}Session file : {api_sessions[index-1]}"
         print(index, user_info)
     return
 

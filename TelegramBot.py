@@ -70,10 +70,10 @@ class TelegramBot:
         spam_bot = await self.client.get_entity('@SpamBot')
         await self.client.send_message(spam_bot, '/start')
 
-        print(f"Waiting for SpamBot response for {str(self.me.first_name) + " " +str(self.me.last_name)}")
+        print(f"Waiting for SpamBot response for {str(self.me.first_name) + " " +str(self.me.last_name if self.me.last_name else "")}")
         await asyncio.sleep(1)  
 
-        return self.restricted
+        return self.restricted    
 
     async def __get_chat(self):
         """Get list of all Megagroup in Chat list."""
