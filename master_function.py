@@ -44,6 +44,17 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
         print(f"{Fore.BLUE}Forwarding cycles : {Fore.GREEN}{cycle_forward}")
         
         for index, bot in bots:
+            print(f"{Fore.RED}Checking restricted forwards message...")
+            is_restricted = await bot.check_spam()
+
+            print(f"{Back.GREEN}{is_restricted}")
+
+            if is_restricted:
+                print(f"{Fore.RED}Bot {index} is restricted and cannot forward messages.")
+                await asyncio.sleep(1)
+                continue 
+
+
             print("Forwarding from Bot", index)
             await bot.forward_message_to_all_groups(limit)
 
