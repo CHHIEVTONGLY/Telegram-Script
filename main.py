@@ -33,7 +33,7 @@ def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, 
         bot = TelegramBot(api_id, api_hash, session_key)
         
         bots.append([i + 1, bot])
-        print(f"{Fore.CYAN}Connecting into bot :{i+1} {Style.RESET_ALL}")
+        print(f"{Fore.CYAN}Connecting into bot :{i+1}, Session : {str(session_key)}{Style.RESET_ALL}")
 
     print("\n-----------------------------------")
     return bots
@@ -48,8 +48,6 @@ async def main():
         print(f"{Fore.GREEN}Sucessfully login into bot :{i} {Style.RESET_ALL}")
         await bot.start()
 
-    # Start all bots concurrently
-    # await asyncio.gather(*(bot.start() for bot in bots))
 
     OPTIONS = {
         '1': lambda: print_all_bots_info(bots),
