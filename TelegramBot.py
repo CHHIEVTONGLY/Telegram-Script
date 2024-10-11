@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import re
 import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
@@ -14,7 +15,9 @@ import time
 import random
 import traceback
 import os
-
+from misc import eval_input
+from telethon.tl.types import User
+from telethon import TelegramClient, events
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -48,6 +51,23 @@ class TelegramBot:
             print("Unexpected error please try again!")
             exit()
 
+    async def check_spam(self):
+        @self.client.on(events.NewMessage(from_users='SpamBot'))
+        async def handler(event):
+            message = event.message.text
+            match = re.search(r'released on (\d{1,2} \w+ \d{4}, \d{2}:\d{2} UTC)', message)
+
+            if match: 
+                release_date = match.group(1)
+                print(f"{Fore.LIGHTRED_EX}Release date : {release_date}")
+            else:
+                print(f"{Fore.LIGHTGREEN_EX}This bot is free ")
+        
+        spam_bot = await self.client.get_entity('@SpamBot')
+        await self.client.send_message(spam_bot, '/start')
+
+        print(f"Waiting for SpamBot response for {str(self.me.first_name) + " " +str(self.me.last_name)}")
+        await asyncio.sleep(1)  
 
     async def __get_chat(self):
         """Get list of all Megagroup in Chat list."""
@@ -395,19 +415,6 @@ class TelegramBot:
 
         # Add users to the group
         await self.add_users_to_group(target_group_entity, users, input_file)
-
-    # async def add_user(self, user):
-    #     if not self.groups:
-    #         await self.__get_chat()
-
-    #     if not self.groups:
-    #         print("[!] No megagroups found.")
-    #         return
-        
-        
-    #     target_group_entity = self.choose_group()
-
-    #     await self.add_U2G(target_group_entity, user)
 
 
     async def add_U2G(self, target_group_entity, user):

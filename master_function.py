@@ -172,3 +172,8 @@ async def clean_members():
 
 async def exit_program():
     exit_the_program()
+
+async def all_bots_check_spam(bots: List[Tuple[int, TelegramBot]]):
+    for index, bot in bots:
+        print(f"{Fore.LIGHTGREEN_EX}Bot {index} is checking spam.")
+        await bot.check_spam()

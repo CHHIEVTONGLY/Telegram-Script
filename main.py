@@ -16,6 +16,7 @@ from master_function import (
     clean_members,
     exit_program,
     all_bots_join_group,
+    all_bots_check_spam
 )
 
 from other_function import delete_first_100_rows
@@ -57,10 +58,11 @@ async def main():
         '4': lambda: all_bots_add_members(bots, members_file="members.csv"),
         '5': lambda: all_bots_scrape_members(bots),
         '6': lambda : all_bots_join_group(bots),
-        '7': lambda: all_bots_log_out(bots),
+        '7': lambda : all_bots_check_spam(bots),
         '8': clean_members,
         '9': lambda: delete_first_100_rows("members.csv"),
-        '10': exit_program,
+        '10': lambda: all_bots_log_out(bots),
+        '11' : exit_program
     }
 
     while True:
