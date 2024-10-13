@@ -12,3 +12,5 @@ TG_Script.spec
 TG_Script.py
 test
 setup.py
+server
+*.pem

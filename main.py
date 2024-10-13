@@ -5,9 +5,7 @@ from typing import List, Tuple
 
 
 from master_function import (
-    print_bot_info,
     print_all_bots_info,
-    print_bot_chat,
     print_all_bots_chat,
     all_bots_forward,
     all_bots_add_members,
@@ -20,6 +18,14 @@ from master_function import (
 )
 
 from other_function import delete_first_100_rows
+
+from license_validation import (
+    load_public_key , 
+    verify_license_data,
+    is_license_expired,
+    store_license_key,
+    load_license_from_file,
+)
 
 
 def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, TelegramBot]]:
@@ -40,6 +46,36 @@ def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, 
 
 
 async def main():
+    # Load stored license if it exists
+    stored_license_key, stored_expiration_date, stored_signature = load_license_from_file()                
+
+    if stored_license_key:
+        public_key = load_public_key()
+        if is_license_expired(stored_expiration_date):
+            print(f"{Fore.RED}License expired on {stored_expiration_date}!{Style.RESET_ALL}")
+            return
+        elif verify_license_data(stored_license_key, stored_expiration_date, stored_signature, public_key):
+            print(f"{Fore.GREEN}Stored license key validated!{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}Stored license key is invalid!{Style.RESET_ALL}")
+            return
+    else:
+        license_key = input("Enter your username: ")
+        expiration_date = input("Enter your license expiration date (YYYY-MM-DD): ")
+        signature = input("Enter your license signature: ")
+
+        public_key = load_public_key()
+        if is_license_expired(expiration_date):
+            print(f"{Fore.RED}The provided license has already expired on {expiration_date}!{Style.RESET_ALL}")
+            return
+        elif not verify_license_data(license_key, expiration_date, signature, public_key):
+            print(f"{Fore.RED}Invalid license key!{Style.RESET_ALL}")
+            return  # Exit the program if the license is invalid
+
+        print(f"{Fore.GREEN}License key validated!{Style.RESET_ALL}")
+        # Store the validated license key
+        store_license_key(license_key, expiration_date, signature)
+
     print_intro()
     
     bots = create_telegram_bots()
