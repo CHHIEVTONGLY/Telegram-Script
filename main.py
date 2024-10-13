@@ -2,6 +2,7 @@ from colorama import Fore , Style , Back
 from TelegramBot import TelegramBot
 from misc import print_intro, get_api_credentials, print_info
 from typing import List, Tuple
+import os
 
 
 from master_function import (
@@ -53,11 +54,13 @@ async def main():
         public_key = load_public_key()
         if is_license_expired(stored_expiration_date):
             print(f"{Fore.RED}License expired on {stored_expiration_date}!{Style.RESET_ALL}")
+            os.remove("license.csv")
             return
         elif verify_license_data(stored_license_key, stored_expiration_date, stored_signature, public_key):
             print(f"{Fore.GREEN}Stored license key validated!{Style.RESET_ALL}")
         else:
-            print(f"{Fore.RED}Stored license key is invalid!{Style.RESET_ALL}")
+            print(f"{Fore.RED}Stored license key is invalid! Please try again...{Style.RESET_ALL}")
+            os.remove("license.csv")
             return
     else:
         license_key = input("Enter your username: ")
@@ -67,9 +70,11 @@ async def main():
         public_key = load_public_key()
         if is_license_expired(expiration_date):
             print(f"{Fore.RED}The provided license has already expired on {expiration_date}!{Style.RESET_ALL}")
+            os.remove("license.csv")
             return
         elif not verify_license_data(license_key, expiration_date, signature, public_key):
-            print(f"{Fore.RED}Invalid license key!{Style.RESET_ALL}")
+            print(f"{Fore.RED}Invalid license key! Please try again...{Style.RESET_ALL}")
+            os.remove("license.csv")
             return  # Exit the program if the license is invalid
 
         print(f"{Fore.GREEN}License key validated!{Style.RESET_ALL}")
