@@ -106,17 +106,18 @@ def print_info():
         ---------------------------------------------------
         
         Options:
-        1. Print all bots info
-        2. Print all bots chat
-        3. Forward message to all groups{Fore.GREEN} (SAFE 100% for OLD ACCOUNT) {Style.RESET_ALL}
-        4. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
-        5. Scrape members 
-        6. Join gp via link
-        7. Check bot is restricted sending messages {Fore.LIGHTRED_EX}(Use this first b4 use option 3){Style.RESET_ALL}
-        8. Clean members.csv
-        9. Delete 100 row members
-        10. Log out all bots
-        {Fore.RED}11. Exit the program.{Style.RESET_ALL}   
+        1. Add more bot
+        2. Print all bots info
+        3. Print all bots chat
+        4. Forward message to all groups{Fore.GREEN} (SAFE 100% for OLD ACCOUNT) {Style.RESET_ALL}
+        5. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
+        6. Scrape members 
+        7. Join gp via link
+        8. Check bot is restricted sending messages {Fore.LIGHTRED_EX}(Use this first b4 use option 3){Style.RESET_ALL}
+        9. Clean members.csv
+        10. Delete 100 row members
+        11. Log out all bots
+        {Fore.RED}12. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)

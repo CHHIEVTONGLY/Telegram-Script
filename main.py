@@ -3,6 +3,7 @@ from TelegramBot import TelegramBot
 from misc import print_intro, get_api_credentials, print_info
 from typing import List, Tuple
 import os
+from telethon.errors import ApiIdInvalidError 
 
 
 from master_function import (
@@ -28,27 +29,49 @@ from license_validation import (
     load_license_from_file,
 )
 
+from add_bot import (add_bot , remove_faulty_row)
 
-def create_telegram_bots(credentials_file="credentials.csv") -> List[Tuple[int, TelegramBot]]:
+async def create_telegram_bots(credentials_file='credentials.csv') -> List[Tuple[int, TelegramBot]]:
     credentials_list = get_api_credentials(credentials_file)
     bots = []
 
     for i, credentials in enumerate(credentials_list):
-        api_id = int(credentials["api_id"])
-        api_hash = credentials["api_hash"]
-        session_key = credentials["session_key"]
-        bot = TelegramBot(api_id, api_hash, session_key)
+        api_id_str = credentials["api_id"]
+
+        try:
+            # Try to convert api_id to an integer
+            api_id = int(api_id_str)
+            api_hash = credentials["api_hash"]
+            session_key = credentials["session_key"]
+
+            # Create a bot instance
+            bot = TelegramBot(api_id, api_hash, session_key)
+
+            # Try to connect the bot
+            await bot.start()  # This will raise an error if connection fails
+            
+            # Append bot to the list if successful
+            bots.append([i + 1, bot])
+            print(f"{Fore.CYAN}Successfully connected bot :{i + 1}, Session : {str(session_key)}{Style.RESET_ALL}")
         
-        bots.append([i + 1, bot])
-        print(f"{Fore.CYAN}Connecting into bot :{i+1}, Session : {str(session_key)}{Style.RESET_ALL}")
+        except ApiIdInvalidError:
+            # Handle specific ApiIdInvalidError
+            print(f"{Fore.RED}Invalid api_id/api_hash for bot {i + 1} with session {session_key}. Removing credentials.{Style.RESET_ALL}")
+            remove_faulty_row(credentials_file, credentials)  # Remove the faulty row
+            print(f"{Fore.YELLOW}Removed faulty bot credentials for bot {i + 1} from {credentials_file}.{Style.RESET_ALL}")
+
+        except Exception as e:
+            # If there's any other error, print it and remove the faulty row
+            print(f"{Fore.RED}Error connecting bot {i + 1} with session {session_key}: {e}{Style.RESET_ALL}")
+            remove_faulty_row(credentials_file, credentials)  # Remove the faulty row
+            print(f"{Fore.YELLOW}Removed faulty bot credentials for bot {i + 1} from {credentials_file}.{Style.RESET_ALL}")
 
     print("\n-----------------------------------")
     return bots
 
 
 async def main():
-    # Load stored license if it exists
-    stored_license_key, stored_expiration_date, stored_signature = load_license_from_file()                
+    stored_license_key, stored_expiration_date, stored_signature = load_license_from_file()
 
     if stored_license_key:
         public_key = load_public_key()
@@ -83,25 +106,25 @@ async def main():
 
     print_intro()
     
-    bots = create_telegram_bots()
+    bots = await create_telegram_bots()
 
-    for i, bot in bots:
-        print(f"{Fore.GREEN}Sucessfully login into bot :{i} {Style.RESET_ALL}")
-        await bot.start()
-
+    for i, bot in bots: 
+        print(f"{Fore.GREEN}Successfully logged into bot :{i} {Style.RESET_ALL}")
+        await bot.start()  
 
     OPTIONS = {
-        '1': lambda: print_all_bots_info(bots),
-        '2': lambda: print_all_bots_chat(bots),
-        '3': lambda: all_bots_forward(bots),
-        '4': lambda: all_bots_add_members(bots, members_file="members.csv"),
-        '5': lambda: all_bots_scrape_members(bots),
-        '6': lambda : all_bots_join_group(bots),
-        '7': lambda : all_bots_check_spam(bots),
-        '8': clean_members,
-        '9': lambda: delete_first_100_rows("members.csv"),
-        '10': lambda: all_bots_log_out(bots),
-        '11' : exit_program
+        '1': add_bot,
+        '2': lambda: print_all_bots_info(bots),
+        '3': lambda: print_all_bots_chat(bots),
+        '4': lambda: all_bots_forward(bots),
+        '5': lambda: all_bots_add_members(bots, members_file="members.csv"),
+        '6': lambda: all_bots_scrape_members(bots),
+        '7': lambda: all_bots_join_group(bots),
+        '8': lambda: all_bots_check_spam(bots),
+        '9': clean_members,
+        '10': lambda: delete_first_100_rows("members.csv"),
+        '11': lambda: all_bots_log_out(bots),
+        '12': exit_program
     }
 
     while True:
