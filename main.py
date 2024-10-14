@@ -30,6 +30,7 @@ from license_validation import (
 )
 
 from add_bot import (add_bot , remove_faulty_row)
+from customer_service import (support)
 
 async def create_telegram_bots(credentials_file='credentials.csv') -> List[Tuple[int, TelegramBot]]:
     credentials_list = get_api_credentials(credentials_file)
@@ -124,7 +125,8 @@ async def main():
         '9': clean_members,
         '10': lambda: delete_first_100_rows("members.csv"),
         '11': lambda: all_bots_log_out(bots),
-        '12': exit_program
+        '12': exit_program,
+        '0': support
     }
 
     while True:

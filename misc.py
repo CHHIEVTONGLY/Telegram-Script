@@ -92,7 +92,7 @@ def print_intro():
 |_   _| ____| |   | ____/ ___|  _ \    / \  |  \/  | |_   _/ _ \ / _ \| |    
   | | |  _| | |   |  _|| |  _| |_) |  / _ \ | |\/| |   | || | | | | | | |    
   | | | |___| |___| |__| |_| |  _ <  / ___ \| |  | |   | || |_| | |_| | |___ 
-  |_| |_____|_____|_____\____|_| \_\/_/   \_\_|  |_|   |_| \___/ \___/|_____|
+  |_| |_____|_____|_____\____|_| \_\/_/   \_\_|  |_|   |_| \___/ \___/|_____| by LCT
 
 
 """
@@ -106,6 +106,7 @@ def print_info():
         ---------------------------------------------------
         
         Options:
+        0. Customer Service {Fore.YELLOW}(If have any problems send message via my telegram){Style.RESET_ALL}
         1. Add more bot
         2. Print all bots info
         3. Print all bots chat
