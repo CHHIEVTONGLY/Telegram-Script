@@ -121,7 +121,7 @@ def print_info():
         6. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
         7. Scrape members 
         8. Join gp via link
-        9. Check bot is restricted sending messages {Fore.LIGHTRED_EX}(Use this first b4 use option 3){Style.RESET_ALL}
+        9. Check bot is restricted sending messages
         10. Clean members.csv
         11. Delete 100 row members
         12. Log out all bots

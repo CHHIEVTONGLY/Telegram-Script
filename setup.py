@@ -11,7 +11,7 @@ executable = Executable(
 # Setup configuration
 setup(
     name="Telegram Script by LCT",
-    version="2.5",
+    version="2.6",
     description="Telegram Script by LCT",
     executables=[executable]  # Use the executable object here
 )
