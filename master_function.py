@@ -84,6 +84,7 @@ async def auto_reply(bot):
 async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
     print(f"Send {limit} messages to each group.")
+    bot_count = len(bots)
 
     cycle_forward = 0
 
@@ -106,7 +107,21 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
             print("Forwarding from Bot", index)
             await bot.forward_message_to_all_groups(limit)
 
-            delay = random.uniform(120, 160)
+            if bot_count <= 5:
+                delay1 = 5*60
+                delay2 = 5.5*60
+            elif 5 < bot_count <= 10:
+                delay1 = 3.5*60
+                delay2 = 4*60
+            elif 10 < bot_count <= 15:
+                delay1 = 2.5*60
+                delay2 = 3*60
+            else:
+                delay1 = 1*60
+                delay2 = 2*60
+
+
+            delay = random.uniform(delay1, delay2)
 
             minutes = int(delay // 60)
             seconds = int(delay % 60)
