@@ -170,9 +170,34 @@ class TelegramBot:
     
 
     async def __forward_to_all(self, group_ids, chat_id, messages):
-        for group_id in group_ids:
-            for message in messages:
-                await self.forward_message_to_group(group_id, chat_id, message.id)
+        # Remove any duplicate group IDs
+        unique_group_ids = list(set(group_ids))
+        print(f"Unique group IDs: {unique_group_ids}")
+
+        # Ensure at least one message exists
+        if not messages:
+            print("No messages to forward.")
+            return
+
+        # If only 1 message is to be forwarded, avoid the nested loop
+        if len(messages) == 1:
+            message_to_forward = messages[0]
+            print(f"Forwarding single message ID {message_to_forward.id} to all groups")
+            for group_id in unique_group_ids:
+                try:
+                    await self.forward_message_to_group(group_id, chat_id, message_to_forward.id)
+                except Exception as e:
+                    print(f"Failed to forward message to group {group_id}: {e}")
+        else:
+            # Forward multiple messages to all groups
+            for group_id in unique_group_ids:
+                for message in messages:
+                    try:
+                        await self.forward_message_to_group(group_id, chat_id, message.id)
+                    except Exception as e:
+                        print(f"Failed to forward message to group {group_id}: {e}")
+
+        print("Forwarding completed.")
 
     async def scrape_members(self, target_group):
         print(f'[+] Fetching members from group: {target_group.title}')
