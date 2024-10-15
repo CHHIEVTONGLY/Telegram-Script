@@ -1,4 +1,5 @@
 import asyncio
+from telethon import events
 import csv
 import os
 import random
@@ -41,6 +42,44 @@ async def print_all_bots_chat(bots: List[Tuple[int, TelegramBot]]):
         await print_bot_chat(bot)
     return
 
+REPLIED_USERS_FILE = 'reply_data.csv'
+
+# Load replied users from the CSV file if it exists
+replied_users = set()
+if os.path.exists(REPLIED_USERS_FILE):
+    with open(REPLIED_USERS_FILE, 'r', newline='') as f:
+        reader = csv.reader(f)
+        replied_users = {int(row[0]) for row in reader}
+
+async def load_auto_reply_message():
+    message_file = 'auto_reply_message.txt'
+
+    if os.path.exists(message_file):
+        with open(message_file, 'r', encoding='utf-8') as f:
+            return f.read().strip() 
+    else:
+        print("auto_reply_message.txt not found. Please input the auto-reply message:")
+        user_message = input("Enter the auto-reply message: ")
+
+        with open(message_file, 'w', encoding='utf-8') as f:
+            f.write(user_message)
+
+        print(f"Auto-reply message saved in {message_file}.")
+        return user_message
+
+async def auto_reply(bot):
+    auto_reply_message = await load_auto_reply_message()
+
+    @bot.client.on(events.NewMessage)
+    async def handle_new_message(event):
+        if event.is_private:
+            sender_id = event.sender_id
+            if sender_id not in replied_users:
+                await event.reply(auto_reply_message)
+                replied_users.add(sender_id)
+                with open(REPLIED_USERS_FILE, 'a', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow([sender_id])
 
 async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
@@ -74,6 +113,44 @@ async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
 
             print(f"Waiting for {minutes} minutes and {seconds} seconds")
             await asyncio.sleep(delay)
+
+async def all_bots_forward_and_auto_reply(bots: List[Tuple[int, TelegramBot]]):
+    limit = eval_input("How many messages? (Recommend = 1 message ): ", 0, 100, 1)
+    print(f"Send {limit} messages to each group.")
+    
+
+    cycle_forward = 0
+
+    while True:
+        cycle_forward += 1
+        print(f"{Fore.BLUE}Forwarding cycles : {Fore.GREEN}{cycle_forward}")
+        
+        for index, bot in bots:
+            print(f"{Fore.RED}Checking restricted forwards message...")
+            is_restricted = await bot.check_spam()
+
+            print(f"{Back.GREEN}{is_restricted}")
+
+            if is_restricted:
+                print(f"{Fore.RED}Bot {index} is restricted and cannot forward messages.")
+                await asyncio.sleep(1)
+                continue 
+
+
+            print("Forwarding from Bot", index)
+            await bot.forward_message_to_all_groups(limit)
+
+            delay = random.uniform(120, 160)
+
+            minutes = int(delay // 60)
+            seconds = int(delay % 60)
+
+            print(f"Waiting for {minutes} minutes and {seconds} seconds")
+            await auto_reply(bot)
+            await asyncio.sleep(delay)
+
+              
+
 
 async def all_bots_join_group(bots: List[Tuple[int, TelegramBot]]):
     # Ask the user for the number of groups to join

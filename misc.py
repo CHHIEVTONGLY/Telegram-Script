@@ -103,6 +103,12 @@ from colorama import Fore, Style
 
 def print_info():
     print(f"""
+          
+        {Fore.RED}[+] Beware all of these functions are not 100% safe for your bot accounts it's depend on accounts quality
+        {Fore.YELLOW}[+] Because of telegram caughtion , it's depend on your bot account is old or new account
+        {Fore.CYAN}[+] We recommend using old accounts telegram , or premium bot accounts 
+        {Fore.MAGENTA}[+] Use accounts as your primary location - {Fore.RED}Ex : If you live in USA use +1 account telegram 
+        {Fore.GREEN}[+] Use this script at your own risk {Style.RESET_ALL}
         ---------------------------------------------------
         
         Options:
@@ -111,14 +117,15 @@ def print_info():
         2. Print all bots info
         3. Print all bots chat
         4. Forward message to all groups{Fore.GREEN} (SAFE 100% for OLD ACCOUNT) {Style.RESET_ALL}
-        5. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
-        6. Scrape members 
-        7. Join gp via link
-        8. Check bot is restricted sending messages {Fore.LIGHTRED_EX}(Use this first b4 use option 3){Style.RESET_ALL}
-        9. Clean members.csv
-        10. Delete 100 row members
-        11. Log out all bots
-        {Fore.RED}12. Exit the program.{Style.RESET_ALL}   
+        5. Forward message to all groups + Auto reply to when user DM
+        6. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
+        7. Scrape members 
+        8. Join gp via link
+        9. Check bot is restricted sending messages {Fore.LIGHTRED_EX}(Use this first b4 use option 3){Style.RESET_ALL}
+        10. Clean members.csv
+        11. Delete 100 row members
+        12. Log out all bots
+        {Fore.RED}13. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
         """)

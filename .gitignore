@@ -14,3 +14,4 @@ test
 setup.py
 server
 *.pem
+auto_reply_message.txt

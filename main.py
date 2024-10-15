@@ -16,7 +16,8 @@ from master_function import (
     clean_members,
     exit_program,
     all_bots_join_group,
-    all_bots_check_spam
+    all_bots_check_spam,
+    all_bots_forward_and_auto_reply,
 )
 
 from other_function import delete_first_100_rows
@@ -81,7 +82,7 @@ async def main():
             os.remove("license.csv")
             return
         elif verify_license_data(stored_license_key, stored_expiration_date, stored_signature, public_key):
-            print(f"{Fore.GREEN}Stored license key validated!{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}Stored license key validated!- {Fore.RED}Expired on : {stored_expiration_date}{Style.RESET_ALL}")
         else:
             print(f"{Fore.RED}Stored license key is invalid! Please try again...{Style.RESET_ALL}")
             os.remove("license.csv")
@@ -118,15 +119,16 @@ async def main():
         '2': lambda: print_all_bots_info(bots),
         '3': lambda: print_all_bots_chat(bots),
         '4': lambda: all_bots_forward(bots),
-        '5': lambda: all_bots_add_members(bots, members_file="members.csv"),
-        '6': lambda: all_bots_scrape_members(bots),
-        '7': lambda: all_bots_join_group(bots),
-        '8': lambda: all_bots_check_spam(bots),
-        '9': clean_members,
-        '10': lambda: delete_first_100_rows("members.csv"),
-        '11': lambda: all_bots_log_out(bots),
-        '12': exit_program,
-        '0': support
+        '5': lambda:all_bots_forward_and_auto_reply(bots),
+        '6': lambda: all_bots_add_members(bots, members_file="members.csv"),
+        '7': lambda: all_bots_scrape_members(bots),
+        '8': lambda: all_bots_join_group(bots),
+        '9': lambda: all_bots_check_spam(bots),
+        '10': clean_members,
+        '11': lambda: delete_first_100_rows("members.csv"),
+        '12': lambda: all_bots_log_out(bots),
+        '13': exit_program,
+        '0': support,
     }
 
     while True:
