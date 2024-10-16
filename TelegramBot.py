@@ -77,11 +77,16 @@ class TelegramBot:
 
     async def __get_chat(self):
         """Get list of all Megagroup in Chat list."""
+        # Clear the groups and groups_id lists before fetching chats
+        self.groups = []  # Reset groups
+        self.groups_id = set()  # Use a set to ensure unique IDs
+
         for chat in self.chats:
-            if getattr(chat, 'megagroup', False):
+            if getattr(chat, 'megagroup', False) and chat.id not in self.groups_id:
                 self.groups.append(chat)
-                self.groups_id.append(chat.id)
+                self.groups_id.add(chat.id)  # Add the ID to the set to ensure uniqueness
         return
+
     
 
     async def print_chat(self):
