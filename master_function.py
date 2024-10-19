@@ -289,3 +289,43 @@ async def all_bots_check_spam(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:
         print(f"{Fore.LIGHTGREEN_EX}Bot {index} is checking spam.")
         await bot.check_spam()
+
+async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]): 
+    if not bots:
+        print("[!] No bots available.")
+        return
+
+    await print_all_bots_info(bots)
+
+    print(f"""
+    {Fore.BLUE}1. Change first name & last name  
+    {Fore.BLACK}2. Change bot usernmae
+    {Fore.MAGENTA}3. All bot remove username
+    {Fore.GREEN}4. All bot auto setup bio
+    {Fore.LIGHTBLUE_EX}5.All bot disallowed call and invite group (Nobody)
+
+""")
+    option_selection = input("Input option: ")
+
+    if option_selection == '1':
+        bot_index = eval_input("Please choose bot to change: ", 0, len(bots) + 1, 1)
+        bot = bots[bot_index - 1][1]
+        await bot.update_name()
+    elif option_selection == '2':
+        bot_index = eval_input("Please choose bot to change: ", 0, len(bots) + 1, 1)
+        bot = bots[bot_index - 1][1]
+        await bot.update_username()
+    elif option_selection == '3':
+        for index, bot in bots:
+            await bot.remove_all_bot_username()  
+    elif option_selection == '4':
+        for index, bot in bots:
+            await bot.update_bot_bio()  
+            print(f"{Fore.GREEN}[+] Bot {index} updated bio")    
+    elif option_selection == '5':
+        for index, bot in bots:
+            await bot.disallow_call_and_invite_group()  
+            print(f"{Fore.GREEN}[+] Bot {index} disallowed call and invite group")  
+    else: 
+        print("Invalid option")
+

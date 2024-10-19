@@ -128,6 +128,11 @@ def print_info():
         {Fore.RED}13. Exit the program.{Style.RESET_ALL}   
           
         ---------------------------------------------------
+
+        {Fore.CYAN}14. Bot account adjustments {Style.RESET_ALL}
+
+        ---------------------------------------------------
+
         """)
 
 

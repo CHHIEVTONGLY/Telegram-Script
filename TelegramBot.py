@@ -16,8 +16,9 @@ import random
 import traceback
 import os
 from misc import eval_input
-from telethon.tl.types import User
+from telethon.tl.types import User 
 from telethon import TelegramClient, events
+from telethon.tl.functions.account import UpdateProfileRequest , UpdateUsernameRequest 
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -477,7 +478,85 @@ class TelegramBot:
         except Exception as e:
             print(f"[!] Unexpected error: {e}")
             traceback.print_exc()
+
+
+    # User details
+
+    async def update_name(self):
+        try:
+            first_name = input("Enter first name: ")
+            last_name = input("Enter last name: ")
+            await self.client(UpdateProfileRequest(first_name=first_name, last_name=last_name))
+            print(f"{Fore.GREEN}[+] Name updated to {first_name} {last_name}.")
+        except Exception as e:
+            print(f"Error updating name: {str(e)}")
+
+
+    async def update_username(self):
+        try:
+            username = input("Enter username (use `` to remove username): ")
+
             
+            # If the username is provided, ensure it's valid
+            if username and not (username.isalnum() or "_" in username):
+                print("Invalid username. Please enter only alphanumeric characters and underscores.")
+                return
+
+            # Update or remove the username
+            await self.client(UpdateUsernameRequest(username=username))
+            
+            if username == "":
+                print("Username removed successfully.")
+            else:
+                print(f"Username updated to {username}.")
+                
+        except Exception as e:
+            print(f"Error updating/removing username: {str(e)}")
+
+    
+    async def remove_all_bot_username(self):
+        username = ''
+        try: 
+            await self.client(UpdateUsernameRequest(username=username))
+            if username == "":
+                print("Username removed successfully.")
+            else:
+                print(f"Username updated to {username}.")
+        except Exception as e:
+            print(f"Error updating/removing username: {str(e)}")
+
+
+    async def update_bot_bio(self):
+        BIO_LIST = [
+            "Lover of technology and coding.",
+            "Just another bot in the Telegram universe.",
+            "Here to make your life easier!",
+            "Coding is my superpower.",
+            "In a relationship with Python.",
+            "Bot powered by coffee.",
+            "Always learning, always growing.",
+            "Sharing knowledge and friendship.",
+            "Let's connect and share ideas!",
+            "Living the bot life one message at a time.",
+            "Living with the present forgot about the past." , 
+            "Enjoy your adult life once you not able to turn back." , 
+            "Appreciate with your life." , 
+            "Life is not perfect but it's acceptable.",
+            "Learning growing together. " , 
+            "Family is the real supporter."
+            "Don't let the time passed let enjoy the moment.",
+            "Enjoy your time with your family some people can't even enjoy it even they want." , 
+            "Life is not a race, it's a journey.",
+            "Life is a beautiful journey filled with love, loss, and growth.",
+        ]
+        bio = random.choice(BIO_LIST) 
+        try:
+            await self.client(UpdateProfileRequest(about=bio))
+            print("Bio updated successfully.")
+        except Exception as e:
+            print(f"Error updating bio: {str(e)}")
+
+
 
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):
