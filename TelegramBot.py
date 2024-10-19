@@ -22,6 +22,8 @@ from telethon.tl.functions.account import UpdateProfileRequest , UpdateUsernameR
 from telethon.tl.functions.account import SetPrivacyRequest
 from telethon.tl.types import InputPrivacyValueDisallowAll
 from telethon.tl.types import InputPrivacyKeyChatInvite , InputPrivacyKeyPhoneCall
+from telethon.tl.functions.photos import UploadProfilePhotoRequest
+import requests
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -578,6 +580,34 @@ class TelegramBot:
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
 
+    async def update_profile_picture_from_url(self, image_url):
+        try:
+            # Download the image
+            response = requests.get(image_url)
+            response.raise_for_status()  # Raise an error for bad responses
+
+            # Create a temporary file to store the image
+            temp_file_path = 'temp_image.jpg'
+            with open(temp_file_path, 'wb') as f:
+                f.write(response.content)
+
+            # Upload the file
+            file = await self.client.upload_file(temp_file_path)
+
+            # Update the profile photo using UploadProfilePhotoRequest
+            await self.client(UploadProfilePhotoRequest(
+                file=file
+            ))
+            
+            print(f"{Fore.GREEN}[+] Profile picture updated successfully from URL.{Style.RESET_ALL}")
+
+            # Clean up the temporary file
+            os.remove(temp_file_path)
+            
+        except Exception as e:
+            print(f"{Fore.RED}[-] Error updating profile picture from URL: {str(e)}{Style.RESET_ALL}")
+
+            
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):
     try:

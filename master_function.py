@@ -302,7 +302,8 @@ async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]):
     {Fore.BLACK}2. Change bot usernmae
     {Fore.MAGENTA}3. All bot remove username
     {Fore.GREEN}4. All bot auto setup bio
-    {Fore.LIGHTBLUE_EX}5.All bot disallowed call and invite group (Nobody)
+    {Fore.LIGHTWHITE_EX}5. All bot disallowed call and invite group (Nobody)
+    {Fore.LIGHTYELLOW_EX}6. Upload profile image from url
 
 """)
     option_selection = input("Input option: ")
@@ -326,6 +327,12 @@ async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]):
         for index, bot in bots:
             await bot.update_privacy_settings()  
             print(f"{Fore.GREEN}[+] Bot {index} disallowed call and invite group")  
+    elif option_selection == '6':
+        await print_all_bots_info(bots)
+        bot_index = eval_input(f"{Fore.GREEN}[+] Input bot account want to upload profile picture :  {Style.RESET_ALL}", 0, len(bots) + 1, 1)
+        bot = bots[bot_index - 1][1]
+        image_url = input("Enter the URL of the image: ")
+        await bot.update_profile_picture_from_url(image_url)
     else: 
         print("Invalid option")
 
