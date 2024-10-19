@@ -19,6 +19,9 @@ from misc import eval_input
 from telethon.tl.types import User 
 from telethon import TelegramClient, events
 from telethon.tl.functions.account import UpdateProfileRequest , UpdateUsernameRequest 
+from telethon.tl.functions.account import SetPrivacyRequest
+from telethon.tl.types import InputPrivacyValueDisallowAll
+from telethon.tl.types import InputPrivacyKeyChatInvite , InputPrivacyKeyPhoneCall
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -556,7 +559,24 @@ class TelegramBot:
         except Exception as e:
             print(f"Error updating bio: {str(e)}")
 
+    async def update_privacy_settings(self):
+            try:
+                # Set call privacy to nobody
+                await self.client(SetPrivacyRequest(
+                    key=InputPrivacyKeyPhoneCall(),
+                    rules=[InputPrivacyValueDisallowAll()]
+                ))
+                print("Call privacy updated successfully")
 
+                # Set group invite privacy to nobody
+                await self.client(SetPrivacyRequest(
+                    key=InputPrivacyKeyChatInvite(),
+                    rules=[InputPrivacyValueDisallowAll()]
+                ))
+                print("Group invite privacy updated successfully")
+
+            except Exception as e:
+                print(f"An error occurred: {str(e)}")
 
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):

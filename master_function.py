@@ -324,7 +324,7 @@ async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]):
             print(f"{Fore.GREEN}[+] Bot {index} updated bio")    
     elif option_selection == '5':
         for index, bot in bots:
-            await bot.disallow_call_and_invite_group()  
+            await bot.update_privacy_settings()  
             print(f"{Fore.GREEN}[+] Bot {index} disallowed call and invite group")  
     else: 
         print("Invalid option")
