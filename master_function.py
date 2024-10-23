@@ -285,7 +285,22 @@ async def bots_forwards_to_saved(bots: List[Tuple[int, TelegramBot]]):
         print(f"Bot {index} is showing messages.")
         await bot.show_last_five_messages(target_group)
     return
+
+async def all_bot_removed_saved_messages(bots: List[Tuple[int, TelegramBot]]):
+    if not bots:
+        print("[!] No bots available to remove saved messages.")
+        return
+
+    for index, bot in bots:
+        try:
+            print(f"Bot {index} is removing saved messages...")
+            await bot.remove_all_saved_messages()
+            print(f"Successfully removed saved messages for Bot {index}.")
+        except Exception as e:
+            print(f"Failed to remove saved messages for Bot {index}: {str(e)}")
     
+    print("Finished removing saved messages for all bots.")
+
 
 async def all_bots_log_out(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:

@@ -24,6 +24,7 @@ from telethon.tl.types import InputPrivacyValueDisallowAll
 from telethon.tl.types import InputPrivacyKeyChatInvite , InputPrivacyKeyPhoneCall
 from telethon.tl.functions.photos import UploadProfilePhotoRequest
 import requests
+from telethon.errors import FloodWaitError
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -678,7 +679,29 @@ class TelegramBot:
                     print(f"Invalid message index: {idx}")
         except Exception as e:
             print(f"Failed to forward messages: {str(e)}")
+
+    async def remove_all_saved_messages(self):
+        try:
+            saved_messages = await self.client.get_input_entity('me')
             
+            messages = await self.client.get_messages(saved_messages, limit=100)
+            print(f"Found {len(messages)} messages in Saved Messages: {[msg.id for msg in messages]}")  # Debug output
+
+
+            for message in messages:
+                await self.client.delete_messages(saved_messages, message.id)
+                print(f"Deleted message ID {message.id}")
+
+                # Respect rate limits
+                await asyncio.sleep(1)
+                                
+                if len(messages) == 0:
+                    print("No more messages to delete.")
+                    break
+
+        except Exception as e:
+            print(f"Failed to delete messages: {str(e)}")
+
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):
     try:
