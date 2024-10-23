@@ -18,7 +18,8 @@ from master_function import (
     all_bots_join_group,
     all_bots_check_spam,
     all_bots_forward_and_auto_reply,
-    all_bot_change_name
+    all_bot_change_name,
+    bots_forwards_to_saved
 )
 
 from other_function import delete_first_100_rows
@@ -130,7 +131,8 @@ async def main():
         '12': lambda: all_bots_log_out(bots),
         '13': exit_program,
         '0': support,
-        "14" : lambda : all_bot_change_name(bots)
+        "14" : lambda : all_bot_change_name(bots),
+        '15': lambda: bots_forwards_to_saved(bots)
     }
 
     while True:

@@ -9,7 +9,7 @@ from telethon.errors.rpcerrorlist import PeerFloodError, UserPrivacyRestrictedEr
 from telethon.tl.functions.channels import LeaveChannelRequest, InviteToChannelRequest
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.functions.channels import JoinChannelRequest
-from colorama import Fore, Style, init
+from colorama import Fore, Style, init , Back
 import csv
 import time
 import random
@@ -607,6 +607,77 @@ class TelegramBot:
         except Exception as e:
             print(f"{Fore.RED}[-] Error updating profile picture from URL: {str(e)}{Style.RESET_ALL}")
 
+
+    async def forward_from_group_to_saved(self, group_id):
+        """Listen for forwarded messages in a specific group and forward them to Saved Messages."""
+        @self.client.on(events.NewMessage(chats=group_id))
+        async def handler(event):
+            # Check if the message is forwarded
+            if event.message.fwd_from:
+                # Forward the message to your Saved Messages
+                saved_messages_peer = 'me'
+                await self.client.forward_messages(saved_messages_peer, event.message)
+
+                print(f"{Fore.GREEN}Forwarded a message to Saved Messages from group {group_id}{Style.RESET_ALL}")
+
+    async def show_last_five_messages(self, group_id):
+        try:
+            # Fetch group information
+            group_info = await self.client.get_entity(group_id)
+
+            # Fetch the last 5 messages from the group
+            messages = await self.client.get_messages(group_id, limit=5)
+            
+            print(f"{Fore.CYAN}Last 5 messages from group '{group_info.title}' (ID: {group_info.id}):{Style.RESET_ALL}")
+            for idx, message in enumerate(messages):
+                print(f"================================================")
+                message_text = message.text if message.text else "Media/Non-text message"
+                print(f"{Fore.WHITE}Messages index : [{idx}] - {Back.LIGHTGREEN_EX}{message_text}{Style.RESET_ALL}")
+
+            # Ask user how many messages they want to forward
+            num_messages = int(input(f"{Fore.GREEN}[+]How many messages do you want to forward : {Style.RESET_ALL} "))
+
+            # Get the indexes of the messages to forward
+            selected_indexes = []
+            for _ in range(num_messages):
+                idx = int(input(f"{Fore.LIGHTYELLOW_EX}Enter the message index to forward:{Style.RESET_ALL} "))
+                if idx < len(messages):  # Check if the index is valid
+                    selected_indexes.append(idx)
+                else:
+                    print(f"Invalid index {idx}. Please enter a valid index.")
+
+            # Forward the selected messages
+            await self.forward_selected_messages(group_id, selected_indexes)
+
+        except Exception as e:
+            print(f"{Fore.RED}Failed to fetch messages from group {group_id}: {str(e)}{Style.RESET_ALL}")
+
+    async def forward_selected_messages(self, group_id, selected_indexes):
+        """Forward selected messages to Saved Messages."""
+        try:
+            # Get the last 5 messages from the group
+            messages = await self.client.get_messages(group_id, limit=5)
+
+            # Get the "Saved Messages" entity (your personal cloud chat)
+            saved_messages_peer = await self.client.get_input_entity('me')
+
+            # Iterate through the selected indexes and forward the messages
+            for idx in selected_indexes:
+                if idx < len(messages):
+                    message_id = messages[idx].id  # Get the message ID to forward
+                    from_peer = await self.client.get_input_entity(group_id)  
+
+                    # Forward the message to Saved Messages
+                    await self.client.forward_messages(
+                        saved_messages_peer,  # Destination (Saved Messages)
+                        messages=message_id,  # Message ID to forward
+                        from_peer=from_peer   # The source group/entity
+                    )
+                    print(f"Forwarded message with index [{idx}] to Saved Messages")
+                else:
+                    print(f"Invalid message index: {idx}")
+        except Exception as e:
+            print(f"Failed to forward messages: {str(e)}")
             
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):

@@ -127,9 +127,10 @@ def print_info():
         12. Log out all bots
         {Fore.RED}13. Exit the program.{Style.RESET_ALL}   
           
-        ---------------------------------------------------
+        {Fore.GREEN}{Style.BRIGHT}-------------------- ADVANCED FUNCTION -------------------- {Style.RESET_ALL}
 
         {Fore.CYAN}14. Bot account adjustments {Style.RESET_ALL}
+        {Fore.BLUE}15. Bot account forwards messages into saved messages {Style.RESET_ALL}
 
         ---------------------------------------------------
 

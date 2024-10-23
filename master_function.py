@@ -26,8 +26,8 @@ async def print_all_bots_info(bots: List[Tuple[int, TelegramBot]]):
             api_sessions.append(row["session_key"])
 
     for index, bot in bots:
-        user_info = f"Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''} , {Fore.BLUE}Session file : {api_sessions[index-1]}"
-        print(index, user_info)
+        user_info = f"{Fore.GREEN}{index}.{Style.RESET_ALL} Account name : {bot.me.first_name} {bot.me.last_name if bot.me.last_name else ''} , {Fore.BLUE}Session file : {api_sessions[index-1]}"
+        print(user_info)
     return
 
 
@@ -270,6 +270,22 @@ async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
     await bot.scrape_members(target_group)
     return
 
+async def bots_forwards_to_saved(bots: List[Tuple[int, TelegramBot]]):
+    if not bots:
+        print("[!] No bots available.")
+        return
+
+    for index , bot in bots : 
+        await print_all_bots_info(bots)
+        bot_index = eval_input("Please choose bots to forwards (enter number): ", 0, len(bots) + 1, 1)
+
+        bot = bots[bot_index - 1][1]
+        chosen_group = await bot.choose_group()
+        target_group = chosen_group['target_group']
+        print(f"Bot {index} is showing messages.")
+        await bot.show_last_five_messages(target_group)
+    return
+    
 
 async def all_bots_log_out(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:
@@ -299,7 +315,7 @@ async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]):
 
     print(f"""
     {Fore.BLUE}1. Change first name & last name  
-    {Fore.BLACK}2. Change bot usernmae
+    {Fore.LIGHTGREEN_EX}2. Change bot usernmae
     {Fore.MAGENTA}3. All bot remove username
     {Fore.GREEN}4. All bot auto setup bio
     {Fore.LIGHTWHITE_EX}5. All bot disallowed call and invite group (Nobody)
