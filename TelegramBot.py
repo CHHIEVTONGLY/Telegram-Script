@@ -25,6 +25,13 @@ from telethon.tl.types import InputPrivacyKeyChatInvite , InputPrivacyKeyPhoneCa
 from telethon.tl.functions.photos import UploadProfilePhotoRequest
 import requests
 from telethon.errors import FloodWaitError
+from telethon.tl.functions.channels import JoinChannelRequest
+from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.errors import (
+    UserAlreadyParticipantError,
+    InviteHashExpiredError,
+    InviteHashInvalidError
+)
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -161,21 +168,42 @@ class TelegramBot:
     
     async def join_group_via_link(self, invite_link: str):
         try:
-            if 'joinchat' in invite_link:
-                # For private invite links, extract the invite code
-                invite_code = invite_link.split('/')[-1]
-                print(f"Private group invite code: {invite_code}")
+            if '+' in invite_link:
+                # For new private invite links (t.me/+xxx)
+                invite_code = invite_link.split('+')[1]
+                print(f"New private group invite code: {Fore.CYAN}{invite_code}{Style.RESET_ALL}")
                 await self.client(ImportChatInviteRequest(invite_code))
+                
+            elif 'joinchat' in invite_link:
+                # For old private invite links (t.me/joinchat/xxx)
+                invite_code = invite_link.split('/')[-1]
+                print(f"Private group invite code: {Fore.CYAN}{invite_code}{Style.RESET_ALL}")
+                await self.client(ImportChatInviteRequest(invite_code))
+                
             else:
-                # For public groups, use the group username
+                # For public groups
                 group_username = invite_link.split('/')[-1]
-                print(f"Public group username: {Fore.CYAN}{group_username}")
+                print(f"Public group username: {Fore.CYAN}{group_username}{Style.RESET_ALL}")
                 await self.client(JoinChannelRequest(group_username))
             
-            print(f"{Fore.GREEN}Successfully joined the group.")
+            print(f"{Fore.GREEN}[+] Successfully joined the group.{Style.RESET_ALL}")
+            return True
+            
+        except UserAlreadyParticipantError:
+            print(f"{Fore.YELLOW}[!] Already a member of this group{Style.RESET_ALL}")
+            return True
+            
+        except FloodWaitError as e:
+            print(f"{Fore.RED}[!] Flood wait error. Need to wait {e.seconds} seconds{Style.RESET_ALL}")
+            return False
+            
+        except (InviteHashExpiredError, InviteHashInvalidError):
+            print(f"{Fore.RED}[!] Invalid or expired invite link{Style.RESET_ALL}")
+            return False
+            
         except Exception as e:
-            print(f"Failed to join the group: {e}")
-
+            print(f"{Fore.RED}[!] Failed to join the group: {e}{Style.RESET_ALL}")
+            return False
     def __print_messages(self, messages):
         for message in messages:
             print(f"Message: {message.text}, Message ID: {message.id}")
@@ -400,9 +428,11 @@ class TelegramBot:
                 if success:
                     successful_adds += 1
                     print(f"{Fore.GREEN}[+] Successfully added {username}. Total successful: {successful_adds}")
-                    if successful_adds == 5:
-                        print("[+] Reached the limit of 5 successful adds for this bot.")
-                        break
+                    delay = random.uniform(5, 20)
+
+                    print(f"{Fore.GREEN}Waiting for {delay} seconds to add another user to group....")
+                    await asyncio.sleep(delay)
+
                 else:
                     failed_adds += 1
                     print(f"[-] Failed to add {username}. Total failed: {failed_adds}")
