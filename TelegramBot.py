@@ -32,6 +32,7 @@ from telethon.errors import (
     InviteHashExpiredError,
     InviteHashInvalidError
 )
+from other_function import delete_rows_members
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -420,7 +421,7 @@ class TelegramBot:
         failed_adds = 0
         flood_error_count = 0
         max_flood_errors = 3  # Define your flood error limit here
-
+        amount_user = int(input("How many users you want to add for each bot : "))
         for username in usernames:
             try:
                 success = await self.add_user_by_username(target_group_entity, username)
@@ -428,10 +429,15 @@ class TelegramBot:
                 if success:
                     successful_adds += 1
                     print(f"{Fore.GREEN}[+] Successfully added {username}. Total successful: {successful_adds}")
-                    delay = random.uniform(5, 20)
+                    delay = random.uniform(1, 5)
 
                     print(f"{Fore.GREEN}Waiting for {delay} seconds to add another user to group....")
                     await asyncio.sleep(delay)
+
+                    if(amount_user == successful_adds):
+                        await delete_rows_members("members.csv" , successful_adds)
+                        break
+
 
                 else:
                     failed_adds += 1
