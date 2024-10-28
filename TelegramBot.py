@@ -33,6 +33,10 @@ from telethon.errors import (
     InviteHashInvalidError
 )
 from other_function import delete_rows_members
+from telethon.tl.functions.channels import LeaveChannelRequest
+from telethon.tl.types import Channel, Chat
+from telethon.tl.functions.channels import LeaveChannelRequest
+from telethon.tl.functions.messages import DeleteChatUserRequest
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -738,6 +742,44 @@ class TelegramBot:
         except Exception as e:
             print(f"Failed to delete messages: {str(e)}")
 
+
+    async def leave_all_groups(self):
+        """Leave all Telegram groups and channels."""
+        async for dialog in self.client.iter_dialogs():
+            try:
+                entity = dialog.entity
+                dialog_name = dialog.name or "Unnamed"
+                
+                if isinstance(entity, Channel):
+                    print(f"Attempting to leave channel/supergroup: {Fore.YELLOW}{Style.BRIGHT}{dialog_name}")
+                    try:
+                        input_entity = await self.client.get_input_entity(dialog.id)
+                        await self.client(LeaveChannelRequest(input_entity))
+                        print(f"{Fore.GREEN}Successfully left channel: {dialog_name}")
+                    except Exception as e:
+                        print(f"{Fore.RED}Error leaving channel {dialog_name}: {str(e)}")
+                        
+                elif isinstance(entity, Chat):
+                    print(f"Attempting to leave basic group: {dialog_name}")
+                    try:
+                        # Get your own user ID
+                        me = await self.client.get_me()
+                        await self.client(DeleteChatUserRequest(
+                            chat_id=entity.id,
+                            user_id=me.id
+                        ))
+                        print(f"Successfully left basic group: {dialog_name}")
+                    except Exception as e:
+                        print(f"Error leaving basic group {dialog_name}: {str(e)}")
+                
+                # Add delay to avoid hitting rate limits
+                await asyncio.sleep(2)
+                
+            except Exception as e:
+                print(f"Error processing dialog: {str(e)}")
+                continue
+
+        print("Finished processing all groups and channels.")
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):
     try:

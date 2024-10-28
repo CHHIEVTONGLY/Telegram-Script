@@ -270,21 +270,71 @@ async def all_bots_scrape_members(bots: List[Tuple[int, TelegramBot]]):
     await bot.scrape_members(target_group)
     return
 
+async def bots_leave_all_groups(bots: List[Tuple[int, 'TelegramBot']]):
+    """Process multiple bots leaving groups."""
+    for index, bot in bots:
+        print(f"Bot {index} is attempting to leave all groups and channels...")
+        await bot.leave_all_groups()
+        # Add delay between bots
+        await asyncio.sleep(5)
+
+
 async def bots_forwards_to_saved(bots: List[Tuple[int, TelegramBot]]):
     if not bots:
         print("[!] No bots available.")
         return
 
-    for index , bot in bots : 
-        await print_all_bots_info(bots)
-        bot_index = eval_input("Please choose bots to forwards (enter number): ", 0, len(bots) + 1, 1)
+    option = input("1. Forward with credits\n2. Forward with no credits\nChoose an option: ")
 
-        bot = bots[bot_index - 1][1]
-        chosen_group = await bot.choose_group()
-        target_group = chosen_group['target_group']
-        print(f"Bot {index} is showing messages.")
-        await bot.show_last_five_messages(target_group)
-    return
+    if option == "1":
+        for index, bot in bots:
+            await print_all_bots_info(bots)
+            bot_index = eval_input("Please choose bots to forward (enter number): ", 0, len(bots) + 1, 1)
+
+            bot = bots[bot_index - 1][1]
+            chosen_group = await bot.choose_group()
+            target_group = chosen_group['target_group']
+            print(f"Bot {index} is forwarding messages with credits.")
+            await bot.show_last_five_messages(target_group)
+
+    elif option == "2":
+        for index, bot in bots:
+            await print_all_bots_info(bots)
+            bot_index = eval_input("Please choose bots to forward (enter number): ", 0, len(bots) + 1, 1)
+
+            bot = bots[bot_index - 1][1]
+            chosen_group = await bot.choose_group()
+            target_group = chosen_group['target_group']
+
+            print(f"Bot {index} is forwarding messages without credits.")
+            messages = await bot.show_last_five_messages(target_group)
+
+            # Check that messages were retrieved
+            if not messages:
+                print(f"[!] No messages found in the selected group.")
+                continue
+
+            # Iterate over messages and send content as new messages without sender credits
+            for message in messages:
+                try:
+                    if message.text:
+                        # Send as a new message without sender's name
+                        await bot.send_message("me", message.text)
+                    elif message.photo:
+                        # Send photo without original sender info
+                        await bot.send_photo("me", message.photo.file_id, caption=message.caption)
+                    elif message.document:
+                        # Send document without original sender info
+                        await bot.send_document("me", message.document.file_id, caption=message.caption)
+                    else:
+                        print(f"[!] Unsupported message type: {message}")
+                
+                except Exception as e:
+                    print(f"[!] Error forwarding message: {e}")
+        
+    else:
+        print("[!] Invalid option. Please choose 1 or 2.")
+
 
 async def all_bot_removed_saved_messages(bots: List[Tuple[int, TelegramBot]]):
     if not bots:

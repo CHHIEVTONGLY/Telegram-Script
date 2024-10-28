@@ -132,6 +132,7 @@ def print_info():
         {Fore.CYAN}14. Bot account adjustments {Style.RESET_ALL}
         {Fore.BLUE}15. Bot account forwards messages into saved messages {Style.RESET_ALL}
         {Fore.RED}16. Clear all saved messages from all bots {Style.RESET_ALL}
+        {Fore.LIGHTBLUE_EX}17. All bots leaving all groups/channel {Style.RESET_ALL}
 
         ---------------------------------------------------
 
