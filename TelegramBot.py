@@ -424,56 +424,74 @@ class TelegramBot:
         successful_adds = 0
         failed_adds = 0
         flood_error_count = 0
-        max_flood_errors = 3  # Define your flood error limit here
-        amount_user = int(input("How many users you want to add for each bot : "))
+        max_flood_errors = 3
+        
+        # Get the amount of users to add at the start
+        amount_user = int(input("How many users you want to add for each bot: "))
+        
+        # Create a list to track failed usernames
+        failed_members = []
+
         for username in usernames:
+            # Check if we've reached the desired amount of successful adds
+            if successful_adds >= amount_user:
+                print(f"{Fore.GREEN}[+] Reached target amount of {amount_user} users. Stopping...{Style.RESET_ALL}")
+                break
+
             try:
                 success = await self.add_user_by_username(target_group_entity, username)
 
                 if success:
                     successful_adds += 1
-                    print(f"{Fore.GREEN}[+] Successfully added {username}. Total successful: {successful_adds}")
+                    print(f"{Fore.GREEN}[+] Successfully added {username['username']}. Progress: {successful_adds}/{amount_user}{Style.RESET_ALL}")
+                    
+                    # Add delay between successful adds
                     delay = random.uniform(1, 5)
-
-                    print(f"{Fore.GREEN}Waiting for {delay} seconds to add another user to group....")
+                    print(f"{Fore.CYAN}Waiting for {delay:.2f} seconds before next addition...{Style.RESET_ALL}")
                     await asyncio.sleep(delay)
-
-                    if(amount_user == successful_adds):
-                        await delete_rows_members("members.csv" , successful_adds)
-                        break
-
 
                 else:
                     failed_adds += 1
-                    print(f"[-] Failed to add {username}. Total failed: {failed_adds}")
-                    if failed_adds == 3:
-                        print(f"{Fore.RED}[+] Failed reached the limit of 3 failed")
+                    failed_members.append(username)
+                    print(f"{Fore.YELLOW}[-] Failed to add {username['username']}. Total failed: {failed_adds}{Style.RESET_ALL}")
+                    
+                    if failed_adds >= 3:
+                        print(f"{Fore.RED}[!] Reached maximum failed attempts (3){Style.RESET_ALL}")
                         break
 
             except PeerFloodError:
                 flood_error_count += 1
-                print(f"[!] Flood error occurred. Current flood error count: {flood_error_count}")
+                failed_members.append(username)
+                print(f"{Fore.RED}[!] Flood error occurred. Count: {flood_error_count}/{max_flood_errors}{Style.RESET_ALL}")
+                
                 if flood_error_count >= max_flood_errors:
-                    print(f"{Fore.RED}[!] Stopping due to multiple flood errors. Total successful: {successful_adds}, total failed: {failed_adds}")
+                    print(f"{Fore.RED}[!] Stopping due to multiple flood errors.{Style.RESET_ALL}")
                     break
+
+                # Add longer delay after flood error
+                await asyncio.sleep(random.uniform(5, 10))
 
             except UserPrivacyRestrictedError:
                 failed_adds += 1
-                print(f"[-] Could not add {username} due to privacy restrictions.")
+                failed_members.append(username)
+                print(f"{Fore.YELLOW}[-] Could not add {username['username']} due to privacy restrictions.{Style.RESET_ALL}")
 
             except Exception as e:
                 failed_adds += 1
-                print(f"[-] Unexpected error occurred while adding {username}: {str(e)}")
-                if failed_adds == 5:
-                    break
+                failed_members.append(username)
+                print(f"{Fore.RED}[-] Unexpected error with {username['username']}: {str(e)}{Style.RESET_ALL}")
 
-            # Add a delay between user addition to avoid rate limits
-            delay = random.uniform(1, 3)  
-            print(f"[+] Waiting for {delay:.2f} seconds before adding the next user...")
-            await asyncio.sleep(delay)
+        # After the loop ends (either by completion or breaking), delete the successful rows
+        if successful_adds > 0:
+            await delete_rows_members("members.csv", successful_adds)
+            print(f"{Fore.GREEN}[+] Deleted {successful_adds} successful entries from members.csv{Style.RESET_ALL}")
 
-        print(f"[+] Final results: Successfully added {successful_adds} users, failed to add {failed_adds} users.")
+        print(f"\n{Fore.CYAN}Final Results:{Style.RESET_ALL}")
+        print(f"✓ Successfully added: {successful_adds} users")
+        print(f"✗ Failed to add: {failed_adds} users")
+        print(f"⚠ Flood errors: {flood_error_count}")
         
+        return failed_members    
     async def add_members_to_group(self, input_file):
         """
         Add members to a group
@@ -772,8 +790,7 @@ class TelegramBot:
                     except Exception as e:
                         print(f"Error leaving basic group {dialog_name}: {str(e)}")
                 
-                # Add delay to avoid hitting rate limits
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
                 
             except Exception as e:
                 print(f"Error processing dialog: {str(e)}")
