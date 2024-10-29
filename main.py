@@ -21,7 +21,8 @@ from master_function import (
     all_bot_change_name,
     bots_forwards_to_saved,
     all_bot_removed_saved_messages,
-    bots_leave_all_groups
+    bots_leave_all_groups,
+    print_all_bot_channel_chat,
 )
 
 from other_function import delete_first_100_rows
@@ -136,7 +137,8 @@ async def main():
         "14" : lambda : all_bot_change_name(bots),
         '15': lambda: bots_forwards_to_saved(bots),
         '16': lambda: all_bot_removed_saved_messages(bots),
-        '17': lambda: bots_leave_all_groups(bots)
+        '17': lambda: bots_leave_all_groups(bots),
+        '00': lambda:print_all_bot_channel_chat(bots)
     }
 
     while True:

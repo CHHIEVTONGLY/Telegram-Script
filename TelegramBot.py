@@ -37,6 +37,7 @@ from telethon.tl.functions.channels import LeaveChannelRequest
 from telethon.tl.types import Channel, Chat
 from telethon.tl.functions.channels import LeaveChannelRequest
 from telethon.tl.functions.messages import DeleteChatUserRequest
+from telethon.tl.types import Channel
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -49,6 +50,8 @@ class TelegramBot:
         self.groups_id = []
         self.me = None
         restricted = False
+        self.channels = []
+        self.channels_id = []
 
 
 
@@ -105,9 +108,6 @@ class TelegramBot:
                 self.groups.append(chat)
                 self.groups_id.add(chat.id)  # Add the ID to the set to ensure uniqueness
         return
-
-    
-
     async def print_chat(self):
         """Print the list of all Megagroup in Chat list."""
         # print('Printing the group:')
@@ -119,6 +119,42 @@ class TelegramBot:
             print(f"{index + 1} - {chat.title} | ID - {chat.id}")
         print()
         return
+    async def __get_channel(self):
+        """
+        Fetches channels from the bot's dialogs and ensures unique entries.
+        """
+        # Clear previous channel data
+        self.channels = []
+        self.channels_id = set()
+
+        try:
+            # Get all dialogs (conversations) for the client
+            async for dialog in self.client.iter_dialogs():
+                # Check if the chat is a channel and is unique
+                if dialog.is_channel and not dialog.is_group:
+                    if dialog.id not in self.channels_id:
+                        self.channels.append(dialog.entity)
+                        self.channels_id.add(dialog.id)
+        except Exception as e:
+            print(f"Error fetching channels: {e}")
+
+    async def print_channel(self):
+        """
+        Prints the list of channels. If channels haven't been fetched, it fetches them first.
+        """
+        # Fetch channels if the list is empty
+        if not self.channels:
+            await self.__get_channel()
+
+        # Print channels or a message if none are found
+        if not self.channels:
+            print("No channels found.")
+        else:
+            for index, channel in enumerate(self.channels, 1):
+                try:
+                    print(f"{index} - {channel.title} | ID - {channel.id}")
+                except AttributeError:
+                    print(f"{index} - Channel {channel.id} (title not available)")
 
 
     async def __LeaveChannel(self, group_id):

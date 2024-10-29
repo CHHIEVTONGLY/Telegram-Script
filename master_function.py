@@ -42,6 +42,25 @@ async def print_all_bots_chat(bots: List[Tuple[int, TelegramBot]]):
         await print_bot_chat(bot)
     return
 
+async def print_bot_channel_chat(bot: TelegramBot): 
+    """
+    Prints the channels for a single bot.
+    """
+    if not bot.client:
+        print("Error: Bot client not initialized")
+        return
+    await bot.print_channel()
+
+async def print_all_bot_channel_chat(bots: List[Tuple[int, TelegramBot]]):
+    """
+    Prints channels for each bot in the list of bots.
+    """
+    for index, bot in bots:
+        print(f"Channels From Bot {Fore.GREEN}{index}")
+        await print_bot_channel_chat(bot)
+        print()
+
+        
 REPLIED_USERS_FILE = 'reply_data.csv'
 
 # Load replied users from the CSV file if it exists
