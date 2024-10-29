@@ -60,7 +60,7 @@ async def print_all_bot_channel_chat(bots: List[Tuple[int, TelegramBot]]):
         await print_bot_channel_chat(bot)
         print()
 
-        
+
 REPLIED_USERS_FILE = 'reply_data.csv'
 
 # Load replied users from the CSV file if it exists
@@ -255,6 +255,60 @@ async def all_bots_add_members(bots: List[Tuple[int, TelegramBot]], members_file
                 continue
 
         # Save failed members to CSV
+        if all_failed_members:
+            failed_file = "failed_members.csv"
+            write_members_to_csv(all_failed_members, "Failed Users", filename=failed_file)
+            print(f"{Fore.YELLOW}[+] Failed additions saved to {failed_file}{Style.RESET_ALL}")
+
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error in member addition process: {str(e)}{Style.RESET_ALL}")
+
+async def all_bots_add_members_to_channels(bots: List[Tuple[int, TelegramBot]], members_file="members.csv"):
+    """
+    Coordinates member addition across multiple bots
+    """
+    try:
+        members = read_csv_file(members_file)
+        total_members = count_rows_in_csv(members_file)
+        print(f"{Fore.CYAN}[+] Total members in CSV: {total_members}{Style.RESET_ALL}")
+        
+        if not members:
+            print(f"{Fore.YELLOW}[!] No members found in the CSV file.{Style.RESET_ALL}")
+            return
+            
+        if not bots:
+            print(f"{Fore.RED}[!] No bots available.{Style.RESET_ALL}")
+            return
+
+        all_failed_members = []
+        for index, bot in bots:
+            print(f"\n{Fore.CYAN}[+] Bot {index} starting member addition process{Style.RESET_ALL}")
+            
+            try:
+                current_members = read_csv_file(members_file)
+                if not current_members:
+                    print(f"{Fore.YELLOW}[!] No more members left to process.{Style.RESET_ALL}")
+                    break
+                    
+                channel_info = await bot.choose_channel()
+                if not channel_info:
+                    print(f"{Fore.RED}[!] No channel selected for bot {index}. Skipping.{Style.RESET_ALL}")
+                    continue
+
+                failed_members = await bot.add_users_to_channel(
+                    channel_info['target_channel_entity'],
+                    channel_info['target_channel'],
+                    current_members
+                )
+                if failed_members:
+                    all_failed_members.extend(failed_members)
+                
+                await asyncio.sleep(random.uniform(2, 5))
+                
+            except Exception as e:
+                print(f"{Fore.RED}[!] Error with bot {index}: {str(e)}{Style.RESET_ALL}")
+                continue
+
         if all_failed_members:
             failed_file = "failed_members.csv"
             write_members_to_csv(all_failed_members, "Failed Users", filename=failed_file)

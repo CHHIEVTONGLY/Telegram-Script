@@ -116,23 +116,25 @@ def print_info():
         1. Add more bot
         2. Print all bots info
         3. Print all bots chat
-        4. Forward message to all groups{Fore.GREEN} (SAFE 100% for OLD ACCOUNT) {Style.RESET_ALL}
-        5. Forward message to all groups + Auto reply to when user DM
-        6. Add members to group{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
-        7. Scrape members 
-        8. Join gp via link
-        9. Check bot is restricted sending messages
-        10. Clean members.csv
-        11. Delete 100 row members
-        12. Log out all bots
-        {Fore.RED}13. Exit the program.{Style.RESET_ALL}   
+        4. Print all bot channel
+        5. Forward message to all groups{Fore.GREEN} ( SAFE 100% ) {Style.RESET_ALL}
+        6. Forward message to all groups + Auto reply to when user DM {Fore.LIGHTGREEN_EX}( Highly recommend this function safe 100% ) {Style.RESET_ALL}
+        7. Add members to {Fore.YELLOW}{Style.BRIGHT}group{Style.RESET_ALL}{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
+        8. Add members to {Fore.RED}{Style.BRIGHT}channel{Style.RESET_ALL}{Fore.GREEN} ( Scrape members first before using this function ) {Style.RESET_ALL}
+        9. Scrape members 
+        10. Join gp via link
+        11. Check bot is restricted sending messages
+        12. Clean members.csv
+        13. Delete 100 row members
+        14. Log out all bots
+        {Fore.RED}15. Exit the program.{Style.RESET_ALL}   
           
         {Fore.GREEN}{Style.BRIGHT}-------------------- ADVANCED FUNCTION -------------------- {Style.RESET_ALL}
 
-        {Fore.CYAN}14. Bot account adjustments {Style.RESET_ALL}
-        {Fore.BLUE}15. Bot account forwards messages into saved messages {Style.RESET_ALL}
-        {Fore.RED}16. Clear all saved messages from all bots {Style.RESET_ALL}
-        {Fore.LIGHTBLUE_EX}17. All bots leaving all groups/channel {Style.RESET_ALL}
+        {Fore.CYAN}16. Bot account adjustments {Style.RESET_ALL}
+        {Fore.BLUE}17. Bot account forwards messages into saved messages {Style.RESET_ALL}
+        {Fore.RED}18. Clear all saved messages from all bots {Style.RESET_ALL}
+        {Fore.LIGHTBLUE_EX}19. All bots leaving all groups/channel {Style.RESET_ALL}
 
         ---------------------------------------------------
 

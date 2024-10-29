@@ -38,6 +38,9 @@ from telethon.tl.types import Channel, Chat
 from telethon.tl.functions.channels import LeaveChannelRequest
 from telethon.tl.functions.messages import DeleteChatUserRequest
 from telethon.tl.types import Channel
+from telethon.tl.types import InputPeerChannel, ChannelParticipantAdmin, ChannelParticipantCreator
+from telethon.errors import PeerFloodError, UserPrivacyRestrictedError, ChatAdminRequiredError
+from telethon.tl.functions.channels import InviteToChannelRequest, GetParticipantRequest
 
 class TelegramBot:
     def __init__(self, api_id, api_hash, session_file):
@@ -378,6 +381,27 @@ class TelegramBot:
         # else:
         #     print("Session file not found. Please login again.")
         return True
+    async def choose_channel(self):
+        """
+        Allows user to choose a channel from available channels
+        """
+        await self.print_channel()
+        print(Fore.GREEN + "[+] Available channels:" + Style.RESET_ALL)
+
+        try:
+            c_index = int(input("[+] Enter a number: "))
+            
+            if c_index <= 0 or c_index > len(self.channels):
+                print(f"{Fore.RED}Invalid channel number.{Style.RESET_ALL}")
+                return None
+
+            target_channel = self.channels[c_index - 1]
+            target_channel_entity = InputPeerChannel(target_channel.id, target_channel.access_hash)
+            return {'target_channel': target_channel, 'target_channel_entity': target_channel_entity}
+        except ValueError:
+            print(f"{Fore.RED}Invalid input! Please enter a number.{Style.RESET_ALL}")
+            return None
+
 
 
     async def choose_group(self):
@@ -454,7 +478,157 @@ class TelegramBot:
         except Exception as e:
             print(f"{Fore.RED}[!] Unexpected error while adding {username}: {str(e)}{Style.RESET_ALL}")
             return False
+    
+    async def check_admin_rights(self, channel):
+        """
+        Check if the bot has admin rights in the channel
+        """
+        try:
+            # Get the bot's participant info in the channel
+            participant = await self.client(GetParticipantRequest(
+                channel=channel,
+                participant=await self.client.get_input_entity('me')
+            ))
             
+            # Check if the bot is an admin or creator
+            is_admin = isinstance(participant.participant, (ChannelParticipantAdmin, ChannelParticipantCreator))
+            
+            if not is_admin:
+                print(f"{Fore.RED}[!] Bot does not have admin rights in this channel{Style.RESET_ALL}")
+                print(f"{Fore.YELLOW}[!] Please make the bot an admin with 'Add Members' permission{Style.RESET_ALL}")
+                return False
+                
+            # Check if the admin has invite users permission
+            if isinstance(participant.participant, ChannelParticipantAdmin):
+                admin_rights = participant.participant.admin_rights
+                if not getattr(admin_rights, 'invite_users', False):
+                    print(f"{Fore.RED}[!] Bot does not have 'Add Members' permission{Style.RESET_ALL}")
+                    return False
+            
+            return True
+            
+        except Exception as e:
+            print(f"{Fore.RED}[!] Error checking admin rights: {str(e)}{Style.RESET_ALL}")
+            return False
+
+    async def add_members_to_channel_by_username(self, target_channel_entity, user_data):
+        """
+        Adds a single member to the channel
+        """
+        try:
+            if not isinstance(user_data, dict) or 'username' not in user_data:
+                print(f"{Fore.RED}[!] Invalid user data format{Style.RESET_ALL}")
+                return False
+
+            username = user_data['username']
+            name = user_data.get('name', 'Unknown Name')
+
+            if username.startswith("user_"):
+                print(f"{Fore.YELLOW}[!] Skipping user: {username} because it starts with 'user_'{Style.RESET_ALL}")
+                remove_user_from_csv(username, "members.csv")
+                return False
+
+            print(f"[+] Attempting to add user: {username} ({name})")
+
+            # Resolve the username to get the user entity
+            user_to_add = await self.client.get_input_entity(username)
+
+            # Add the user to the group
+            await self.client(InviteToChannelRequest(target_channel_entity, [user_to_add]))
+            print(f"{Fore.GREEN}[+] Successfully added user: {username}{Style.RESET_ALL}")
+
+            delay = random.uniform(1, 3)
+            print(f"[+] Waiting for {delay:.2f} seconds before next action...")
+            await asyncio.sleep(delay)
+            return True
+
+        except ValueError as e:
+            print(f"{Fore.RED}[!] Could not find user with username: {username}{Style.RESET_ALL}")
+            return False
+        except PeerFloodError:
+            print(f"{Fore.RED}[!] Flood error from Telegram. Stopping for now.{Style.RESET_ALL}")
+            raise
+        except UserPrivacyRestrictedError:
+            print(f"{Fore.YELLOW}[!] The user's ({username}) privacy settings prevent this action.{Style.RESET_ALL}")
+            return False
+        except ChatAdminRequiredError:
+            print(f"{Fore.RED}[!] Bot needs admin privileges to add members.{Style.RESET_ALL}")
+            return False
+        except Exception as e:
+            print(f"{Fore.RED}[!] Unexpected error while adding {username}: {str(e)}{Style.RESET_ALL}")
+            return False
+
+    async def add_users_to_channel(self, target_channel_entity, target_channel, members):
+        """
+        Adds multiple members to the channel
+        """
+        # First check admin rights
+        if not await self.check_admin_rights(target_channel):
+            print(f"{Fore.RED}[!] Cannot proceed without proper admin rights{Style.RESET_ALL}")
+            return []
+
+        successful_adds = 0
+        failed_adds = 0
+        flood_error_count = 0
+        max_flood_errors = 3
+        failed_members = []
+
+        try:
+            amount_user = int(input("How many users you want to add for each bot: "))
+        except ValueError:
+            print(f"{Fore.RED}[!] Invalid input. Please enter a number.{Style.RESET_ALL}")
+            return failed_members
+
+        for member in members:
+            if successful_adds >= amount_user:
+                print(f"{Fore.GREEN}[+] Reached target amount of {amount_user} users. Stopping...{Style.RESET_ALL}")
+                break
+
+            try:
+                success = await self.add_members_to_channel_by_username(target_channel_entity, member)
+
+                if success:
+                    successful_adds += 1
+                    print(f"{Fore.GREEN}[+] Successfully added {member['username']}. Progress: {successful_adds}/{amount_user}{Style.RESET_ALL}")
+                    
+                    delay = random.uniform(1, 5)
+                    print(f"{Fore.CYAN}Waiting for {delay:.2f} seconds before next addition...{Style.RESET_ALL}")
+                    await asyncio.sleep(delay)
+                else:
+                    failed_adds += 1
+                    failed_members.append(member)
+                    print(f"{Fore.YELLOW}[-] Failed to add {member['username']}. Total failed: {failed_adds}{Style.RESET_ALL}")
+                    
+                    if failed_adds >= 3:
+                        print(f"{Fore.RED}[!] Reached maximum failed attempts (3){Style.RESET_ALL}")
+                        break
+
+            except PeerFloodError:
+                flood_error_count += 1
+                failed_members.append(member)
+                print(f"{Fore.RED}[!] Flood error occurred. Count: {flood_error_count}/{max_flood_errors}{Style.RESET_ALL}")
+                
+                if flood_error_count >= max_flood_errors:
+                    print(f"{Fore.RED}[!] Stopping due to multiple flood errors.{Style.RESET_ALL}")
+                    break
+
+                await asyncio.sleep(random.uniform(5, 10))
+
+            except Exception as e:
+                failed_adds += 1
+                failed_members.append(member)
+                print(f"{Fore.RED}[-] Unexpected error with {member['username']}: {str(e)}{Style.RESET_ALL}")
+
+        if successful_adds > 0:
+            await delete_rows_members("members.csv", successful_adds)
+            print(f"{Fore.GREEN}[+] Deleted {successful_adds} successful entries from members.csv{Style.RESET_ALL}")
+
+        print(f"\n{Fore.CYAN}Final Results:{Style.RESET_ALL}")
+        print(f"✓ Successfully added: {successful_adds} users")
+        print(f"✗ Failed to add: {failed_adds} users")
+        print(f"⚠ Flood errors: {flood_error_count}")
+        
+        return failed_members
 
     async def add_users_to_group(self, target_group_entity, usernames):
         successful_adds = 0

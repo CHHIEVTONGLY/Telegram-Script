@@ -23,6 +23,7 @@ from master_function import (
     all_bot_removed_saved_messages,
     bots_leave_all_groups,
     print_all_bot_channel_chat,
+    all_bots_add_members_to_channels
 )
 
 from other_function import delete_first_100_rows
@@ -123,22 +124,23 @@ async def main():
         '1': add_bot,
         '2': lambda: print_all_bots_info(bots),
         '3': lambda: print_all_bots_chat(bots),
-        '4': lambda: all_bots_forward(bots),
-        '5': lambda:all_bots_forward_and_auto_reply(bots),
-        '6': lambda: all_bots_add_members(bots, members_file="members.csv"),
-        '7': lambda: all_bots_scrape_members(bots),
-        '8': lambda: all_bots_join_group(bots),
-        '9': lambda: all_bots_check_spam(bots),
-        '10': clean_members,
-        '11': lambda: delete_first_100_rows("members.csv"),
-        '12': lambda: all_bots_log_out(bots),
-        '13': exit_program,
+        '4': lambda:print_all_bot_channel_chat(bots),
+        '5': lambda: all_bots_forward(bots),
+        '6': lambda:all_bots_forward_and_auto_reply(bots),
+        '7': lambda: all_bots_add_members(bots, members_file="members.csv"),
+        "8":lambda: all_bots_add_members_to_channels(bots , members_file='members.csv'),
+        '9': lambda: all_bots_scrape_members(bots),
+        '10': lambda: all_bots_join_group(bots),
+        '11': lambda: all_bots_check_spam(bots),
+        '12': clean_members,
+        '13': lambda: delete_first_100_rows("members.csv"),
+        '14': lambda: all_bots_log_out(bots),
+        '15': exit_program,
         '0': support,
-        "14" : lambda : all_bot_change_name(bots),
-        '15': lambda: bots_forwards_to_saved(bots),
-        '16': lambda: all_bot_removed_saved_messages(bots),
-        '17': lambda: bots_leave_all_groups(bots),
-        '00': lambda:print_all_bot_channel_chat(bots)
+        "16" : lambda : all_bot_change_name(bots),
+        '17': lambda: bots_forwards_to_saved(bots),
+        '18': lambda: all_bot_removed_saved_messages(bots),
+        '19': lambda: bots_leave_all_groups(bots),
     }
 
     while True:
