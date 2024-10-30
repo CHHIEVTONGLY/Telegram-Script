@@ -86,6 +86,17 @@ async def load_auto_reply_message():
         print(f"Auto-reply message saved in {message_file}.")
         return user_message
 
+
+async def read_message_file(message_path: str) -> str:
+    """Read message content from file"""
+    try:
+        with open(message_path, 'r', encoding='utf-8') as file:
+            return file.read().strip()
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error reading message file: {str(e)}{Style.RESET_ALL}")
+        return ""
+    
+
 async def auto_reply(bot):
     auto_reply_message = await load_auto_reply_message()
 
@@ -100,6 +111,89 @@ async def auto_reply(bot):
                     writer = csv.writer(f)
                     writer.writerow([sender_id])
 
+async def message_file():
+    message_file = 'message_to_send.txt'
+    if os.path.exists(message_file):
+        with open(message_file, 'r', encoding='utf-8') as f:
+            return f.read().strip() 
+    else:
+        print("message_to_send.txt not found. Please input the message you want to send :")
+        user_message = input("Enter the message: ")
+
+        with open(message_file, 'w', encoding='utf-8') as f:
+            f.write(user_message)
+
+        print(f"Message saved in {message_file}.")
+        return user_message
+    
+async def all_bots_send_message(
+    bots: List[Tuple[int, TelegramBot]], 
+    members_file: str = "members.csv", 
+    message_path: str = "message_to_send.txt"
+):
+    """Main function to handle message sending through multiple bots."""
+    try:
+        message_text = await read_message_file(message_path)
+        if not message_text:
+            print(f"{Fore.RED}[!] No message content found.{Style.RESET_ALL}")
+            return
+
+        members = read_csv_file(members_file)
+        if not members:
+            print(f"{Fore.YELLOW}[!] No members found in the CSV file.{Style.RESET_ALL}")
+            return
+
+        total_members = len(members)
+        print(f"{Fore.CYAN}[+] Total members in CSV: {total_members}{Style.RESET_ALL}")
+
+        all_failed_members = []
+        for index, bot in bots:
+            print(f"\n{Fore.CYAN}[+] Bot {index} starting message-sending process{Style.RESET_ALL}")
+
+            bot_members = members[index::len(bots)]
+            failed_members = []
+            for member in bot_members:
+                try:
+                    username = member.get('username', '').strip()
+                    if username:
+                        # Retrieve the full user details using the username
+                        user_to_message = await bot.client.get_entity(username)
+                        print(f"Username :{Fore.RED}{Back.GREEN} {username}")
+
+                        # Check if user_to_message is indeed a User object
+                        if hasattr(user_to_message, 'username'):
+                            # Pass the user entity to auto_pvt_message
+                            success = await bot.auto_pvt_message(user_to_message, message_text)
+                            if not success:
+                                failed_members.append(member)
+
+                            print(f"{Fore.GREEN}[+] Message sent to {user_to_message.username}{Style.RESET_ALL}")
+                        else:
+                            print(f"{Fore.YELLOW}[!] User '{username}' does not have a valid username.{Style.RESET_ALL}")
+                            failed_members.append(member)
+                    else:
+                        print(f"{Fore.YELLOW}[!] Invalid username in member data{Style.RESET_ALL}")
+                        failed_members.append(member)
+
+                    await asyncio.sleep(random.uniform(1, 3))
+
+                except Exception as e:
+                    print(f"{Fore.RED}[!] Error sending to member: {str(e)}{Style.RESET_ALL}")
+                    failed_members.append(member)
+                    continue
+
+            all_failed_members.extend(failed_members)
+            await asyncio.sleep(random.uniform(2, 5))
+
+        if all_failed_members:
+            failed_file = "failed_members.csv"
+            write_members_to_csv(all_failed_members, "Failed Users", filename=failed_file)
+            print(f"{Fore.YELLOW}[+] Failed message attempts saved to {failed_file}{Style.RESET_ALL}")
+
+    except Exception as e:
+        print(f"{Fore.RED}[!] Error in message-sending process: {str(e)}{Style.RESET_ALL}")
+
+        
 async def all_bots_forward(bots: List[Tuple[int, TelegramBot]]):
     limit = eval_input("How many messages? (Default=1): ", 0, 100, 1)
     print(f"Send {limit} messages to each group.")

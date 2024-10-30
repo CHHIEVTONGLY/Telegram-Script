@@ -23,7 +23,8 @@ from master_function import (
     all_bot_removed_saved_messages,
     bots_leave_all_groups,
     print_all_bot_channel_chat,
-    all_bots_add_members_to_channels
+    all_bots_add_members_to_channels,
+    all_bots_send_message
 )
 
 from other_function import delete_first_100_rows
@@ -121,26 +122,27 @@ async def main():
         await bot.start()  
 
     OPTIONS = {
+        '0': support,
         '1': add_bot,
         '2': lambda: print_all_bots_info(bots),
         '3': lambda: print_all_bots_chat(bots),
         '4': lambda:print_all_bot_channel_chat(bots),
-        '5': lambda: all_bots_forward(bots),
-        '6': lambda:all_bots_forward_and_auto_reply(bots),
-        '7': lambda: all_bots_add_members(bots, members_file="members.csv"),
-        "8":lambda: all_bots_add_members_to_channels(bots , members_file='members.csv'),
-        '9': lambda: all_bots_scrape_members(bots),
-        '10': lambda: all_bots_join_group(bots),
-        '11': lambda: all_bots_check_spam(bots),
-        '12': clean_members,
-        '13': lambda: delete_first_100_rows("members.csv"),
-        '14': lambda: all_bots_log_out(bots),
-        '15': exit_program,
-        '0': support,
-        "16" : lambda : all_bot_change_name(bots),
-        '17': lambda: bots_forwards_to_saved(bots),
-        '18': lambda: all_bot_removed_saved_messages(bots),
-        '19': lambda: bots_leave_all_groups(bots),
+        '5': lambda:all_bots_send_message(bots),
+        '6': lambda: all_bots_forward(bots),
+        '7': lambda:all_bots_forward_and_auto_reply(bots),
+        '8': lambda: all_bots_add_members(bots, members_file="members.csv"),
+        "9":lambda: all_bots_add_members_to_channels(bots , members_file='members.csv'),
+        '10': lambda: all_bots_scrape_members(bots),
+        '11': lambda: all_bots_join_group(bots),
+        '12': lambda: all_bots_check_spam(bots),
+        '13': clean_members,
+        '14': lambda: delete_first_100_rows("members.csv"),
+        '15': lambda: all_bots_log_out(bots),
+        '16': exit_program,
+        "17" : lambda : all_bot_change_name(bots),
+        '18': lambda: bots_forwards_to_saved(bots),
+        '19': lambda: all_bot_removed_saved_messages(bots),
+        '20': lambda: bots_leave_all_groups(bots),
     }
 
     while True:

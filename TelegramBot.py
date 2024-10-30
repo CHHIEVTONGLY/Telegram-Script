@@ -1007,6 +1007,24 @@ class TelegramBot:
                 continue
 
         print("Finished processing all groups and channels.")
+
+    async def auto_pvt_message(self, user, message_text):
+        try:
+
+            # Check if the user object is valid
+            if hasattr(user, 'username'):
+                print(f"Sending message to {user.username} (ID: {user.id})")
+            else:
+                print(f"Sending message to ID: {user.id}")
+
+            # Send message using the user object directly
+            await self.client.send_message(user, message_text)
+            print("Message sent successfully!")
+            return True  # Indicate success
+
+        except Exception as e:
+            print(f"Failed to send message to {user.username or user.id}: {e}")
+            return False  # Indicate failure    
     # Function to remove the user from the CSV
 def remove_user_from_csv(username_to_remove, csv_file):
     try:
