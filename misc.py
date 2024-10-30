@@ -57,6 +57,30 @@ def write_members_to_csv(members, target_group_title, target_group_id, filename=
         for member in members:
             writer.writerow([member['username'], member['user_id'], member['name'], target_group_title, target_group_id])
 
+def write_sent_members_to_csv(members, filename="sent_members.csv"):
+    """
+    Writes members who have received messages to a CSV file.
+
+    Args:
+        members (list): List of member dictionaries, each containing at least a 'username' key.
+        filename (str): The filename to save the successful members to.
+    """
+    if not members:
+        print("[!] No members to write.")
+        return
+
+    try:
+        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+            fieldnames = members[0].keys()  # Get field names from the first dictionary in the list
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(members)
+
+        print(f"[+] Successfully wrote {len(members)} members to {filename}")
+        
+    except Exception as e:
+        print(f"[!] Error writing to CSV: {str(e)}")
+
 # def write_members_to_csv(members, target_group_title, target_group_id, filename="members.csv", mode='a'):
 #     """Write members to a CSV file."""
 #     file_exists = os.path.isfile(filename)

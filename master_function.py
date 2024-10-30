@@ -5,7 +5,7 @@ import os
 import random
 import sys
 from colorama import Fore , Back, Style
-from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, remove_duplicates , count_rows_in_csv
+from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, write_sent_members_to_csv , count_rows_in_csv
 from typing import List, Tuple
 from TelegramBot import TelegramBot
 
@@ -138,6 +138,7 @@ async def all_bots_send_message(
             print(f"{Fore.RED}[!] No message content found.{Style.RESET_ALL}")
             return
 
+        # Assuming read_csv_file is synchronous
         members = read_csv_file(members_file)
         if not members:
             print(f"{Fore.YELLOW}[!] No members found in the CSV file.{Style.RESET_ALL}")
@@ -146,28 +147,36 @@ async def all_bots_send_message(
         total_members = len(members)
         print(f"{Fore.CYAN}[+] Total members in CSV: {total_members}{Style.RESET_ALL}")
 
+        try:
+            num_messages_per_bot = int(input("Enter the number of members each bot should send messages to: "))
+        except ValueError:
+            print(f"{Fore.RED}[!] Invalid input. Please enter a number.{Style.RESET_ALL}")
+            return
+
         all_failed_members = []
         for index, bot in bots:
             print(f"\n{Fore.CYAN}[+] Bot {index} starting message-sending process{Style.RESET_ALL}")
 
-            bot_members = members[index::len(bots)]
+            # Limit bot members
+            bot_members = members[index::len(bots)][:num_messages_per_bot]  
             failed_members = []
+
             for member in bot_members:
                 try:
                     username = member.get('username', '').strip()
                     if username:
-                        # Retrieve the full user details using the username
                         user_to_message = await bot.client.get_entity(username)
-                        print(f"Username :{Fore.RED}{Back.GREEN} {username}")
+                        print(f"Username : {username}")
 
-                        # Check if user_to_message is indeed a User object
                         if hasattr(user_to_message, 'username'):
-                            # Pass the user entity to auto_pvt_message
                             success = await bot.auto_pvt_message(user_to_message, message_text)
-                            if not success:
+                            if success:
+                                # Remove successfully messaged member from the list
+                                members.remove(member)
+                                print(f"{Fore.GREEN}[+] Message sent to {user_to_message.username}{Style.RESET_ALL}")
+                            else:
                                 failed_members.append(member)
-
-                            print(f"{Fore.GREEN}[+] Message sent to {user_to_message.username}{Style.RESET_ALL}")
+                                print(f"{Fore.YELLOW}[!] Failed to send to {user_to_message.username}{Style.RESET_ALL}")
                         else:
                             print(f"{Fore.YELLOW}[!] User '{username}' does not have a valid username.{Style.RESET_ALL}")
                             failed_members.append(member)
@@ -175,19 +184,23 @@ async def all_bots_send_message(
                         print(f"{Fore.YELLOW}[!] Invalid username in member data{Style.RESET_ALL}")
                         failed_members.append(member)
 
+                    # Write updated members back to CSV after each success
+                    write_sent_members_to_csv(members, filename=members_file)
+
                     await asyncio.sleep(random.uniform(1, 3))
 
                 except Exception as e:
                     print(f"{Fore.RED}[!] Error sending to member: {str(e)}{Style.RESET_ALL}")
                     failed_members.append(member)
                     continue
-
+            
             all_failed_members.extend(failed_members)
             await asyncio.sleep(random.uniform(2, 5))
 
+        # Save failed members
         if all_failed_members:
             failed_file = "failed_members.csv"
-            write_members_to_csv(all_failed_members, "Failed Users", filename=failed_file)
+            write_sent_members_to_csv(all_failed_members, filename=failed_file)
             print(f"{Fore.YELLOW}[+] Failed message attempts saved to {failed_file}{Style.RESET_ALL}")
 
     except Exception as e:
