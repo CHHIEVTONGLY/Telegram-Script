@@ -77,7 +77,7 @@ def read_csv_file(csv_file):
 
     return user_acc
 
-def delete_first_100_rows(csv_file):
+async def delete_first_100_rows(csv_file):
     try:
         count_rows_in_csv('members.csv')
         row_delete = int(input("How many rows u want to delete : "))

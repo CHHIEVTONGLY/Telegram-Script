@@ -131,6 +131,7 @@ async def all_bots_send_message(
     members_file: str = "members.csv", 
     message_path: str = "message_to_send.txt"
 ):
+    await message_file()
     """Main function to handle message sending through multiple bots."""
     try:
         message_text = await read_message_file(message_path)
@@ -152,9 +153,19 @@ async def all_bots_send_message(
         except ValueError:
             print(f"{Fore.RED}[!] Invalid input. Please enter a number.{Style.RESET_ALL}")
             return
+        
+
 
         all_failed_members = []
         for index, bot in bots:
+            print(f"{Fore.RED}Checking restricted forwards message...")
+            is_restricted = await bot.check_account_broken()
+
+            if is_restricted:
+                print(f"{Fore.RED}Bot {index} is {Style.BRIGHT}broken{Style.RESET_ALL}{Fore.RED} and cannot send messages.")
+                await asyncio.sleep(1)
+                continue 
+
             print(f"\n{Fore.CYAN}[+] Bot {index} starting message-sending process{Style.RESET_ALL}")
 
             # Limit bot members

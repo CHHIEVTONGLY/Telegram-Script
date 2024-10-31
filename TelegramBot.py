@@ -100,6 +100,29 @@ class TelegramBot:
 
         return self.restricted    
 
+    async def check_account_broken(self):
+        self.restricted = False
+
+        @self.client.on(events.NewMessage(from_users='SpamBot'))
+        async def handler(event):
+            message = event.message.text
+
+            if "While the account is limited" in message:
+                print(f"{Fore.LIGHTRED_EX}Account is limited.")
+                self.restricted = True
+            else:
+                print(f"{Fore.LIGHTGREEN_EX}This bot is free.")
+            
+            self.client.remove_event_handler(handler, events.NewMessage(from_users='SpamBot'))
+
+        spam_bot = await self.client.get_entity('@SpamBot')
+        await self.client.send_message(spam_bot, '/start')
+
+        print(f"Waiting for SpamBot response for {self.me.first_name} {self.me.last_name or ''}")
+        await asyncio.sleep(1)
+
+        return self.restricted
+
     async def __get_chat(self):
         """Get list of all Megagroup in Chat list."""
         # Clear the groups and groups_id lists before fetching chats
