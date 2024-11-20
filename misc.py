@@ -157,6 +157,7 @@ def print_info():
         {Fore.GREEN}{Style.BRIGHT}-------------------- ADVANCED FUNCTION -------------------- {Style.RESET_ALL}
 
         {Fore.CYAN}17. Bot account adjustments {Style.RESET_ALL}
+        {Fore.GREEN}18. Change all bot firstname {Fore.RED}(Advanced) {Style.RESET_ALL}
         {Fore.BLUE}18. Bot account forwards messages into saved messages {Style.RESET_ALL}
         {Fore.RED}19. Clear all saved messages from all bots {Style.RESET_ALL}
         {Fore.LIGHTBLUE_EX}20. All bots leaving all groups/channel {Style.RESET_ALL}

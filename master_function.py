@@ -3,6 +3,8 @@ from telethon import events
 import csv
 import os
 import random
+import pandas as pd
+from telethon.tl.functions.account import UpdateProfileRequest 
 import sys
 from colorama import Fore , Back, Style
 from misc import exit_the_program, read_csv_file, write_members_to_csv, eval_input, write_sent_members_to_csv , count_rows_in_csv
@@ -553,6 +555,46 @@ async def all_bots_check_spam(bots: List[Tuple[int, TelegramBot]]):
     for index, bot in bots:
         print(f"{Fore.LIGHTGREEN_EX}Bot {index} is checking spam.")
         await bot.check_spam()
+
+async def all_bot_update_firstname(bots: List[Tuple[int, TelegramBot]], excel_file_path: str):
+    if not bots:
+        print(f"{Fore.RED}[!] No bots available.")
+        return
+    
+    try:
+        # Read the Excel file
+        df = pd.read_csv(excel_file_path)
+        
+        # Check if the Excel file has 'first_name' column
+        if 'first_name' not in df.columns:
+            print(f"{Fore.RED}Error: Excel file must have 'first_name' column.")
+            return
+        
+        # Ensure we have enough names for all bots
+        if len(df) < len(bots):
+            print(f"{Fore.YELLOW}[!] Warning: Not enough names for all bots. Will cycle through names.")
+        
+        # Iterate through bots and names
+        for i, (bot_id, bot) in enumerate(bots):
+            # Use modulo to cycle through names if not enough
+            first_name = df.iloc[i % len(df)]['first_name']
+            
+            try:
+                # Update profile for each bot
+                await bot.client(UpdateProfileRequest(first_name=first_name))
+                print(f"{Fore.BLUE}[+] Bot {bot_id} name updated to :{Fore.LIGHTGREEN_EX}{first_name}")
+            except Exception as e:
+                print(f"{Fore.RED}Error updating name for Bot {bot_id}: {str(e)}")
+        
+        print(f"{Fore.CYAN}Finished updating names for all bots.")
+    
+    except FileNotFoundError:
+        print(f"{Fore.RED}Error: Excel file not found at {excel_file_path}")
+    except pd.errors.EmptyDataError:
+        print(f"{Fore.RED}Error: The Excel file is empty.")
+    except Exception as e:
+        print(f"{Fore.RED}Unexpected error: {str(e)}")
+
 
 async def all_bot_change_name(bots: List[Tuple[int, TelegramBot]]): 
     if not bots:

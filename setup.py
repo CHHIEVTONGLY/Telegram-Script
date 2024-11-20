@@ -10,8 +10,8 @@ executable = Executable(
 
 # Setup configuration
 setup(
-    name="Telegram Script by LCT",
-    version="2.9.1",
-    description="Telegram Script by LCT",
+    name="Telegram Script by @chhievtongly",
+    version="3.0.1",
+    description="Telegram Script @chhievtongly",
     executables=[executable]  # Use the executable object here
 )

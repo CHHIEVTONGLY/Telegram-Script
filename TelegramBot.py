@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import re
+import pandas as pd
 import pytz
 from telethon import TelegramClient
 from telethon.tl.functions.messages import GetDialogsRequest
@@ -787,6 +788,37 @@ class TelegramBot:
             print(f"{Fore.GREEN}[+] Name updated to {first_name} {last_name}.")
         except Exception as e:
             print(f"Error updating name: {str(e)}")
+    
+    async def update_names_from_excel(self, excel_file_path):
+        try:
+            # Read the Excel file
+            df = pd.read_excel(excel_file_path)
+            
+            # Check if the Excel file has 'first_name' and 'last_name' columns
+            if 'first_name' not in df.columns :
+                print(f"{Fore.RED}Error: Excel file must have 'first_name' ")
+                return
+            
+            # Iterate through each row in the DataFrame
+            for index, row in df.iterrows():
+                first_name = row['first_name']
+                
+                try:
+                    # Update profile for each name
+                    await self.client(UpdateProfileRequest(first_name=first_name))
+                    print(f"{Fore.GREEN}[+] Name updated to {first_name}.")
+                except Exception as e:
+                    print(f"{Fore.RED}Error updating name for {first_name} : {str(e)}")
+            
+            print(f"{Fore.CYAN}Finished updating names from Excel file.")
+        
+        except FileNotFoundError:
+            print(f"{Fore.RED}Error: Excel file not found at {excel_file_path}")
+        except pd.errors.EmptyDataError:
+            print(f"{Fore.RED}Error: The Excel file is empty.")
+        except Exception as e:
+            print(f"{Fore.RED}Unexpected error: {str(e)}")
+
 
 
     async def update_username(self):
